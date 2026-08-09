@@ -2,7 +2,7 @@
 const TASK_API='https://bhvkhxmexyhsjhwjsytp.supabase.co/functions/v1/clinic-tasks';
 const STAFF=['ד״ר לזר ג׳רסי','ד״ר ג׳מיל טנוס','ד״ר הדס לוי','קים','רננה','אמילי','זהר','רוני','אביטל','דורין'];
 let staffTasks=[],currentAudience='doctors',taskView='open';
-const escT=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const escT=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[m]));
 const fmt=d=>new Date(d).toLocaleString('he-IL',{timeZone:'Asia/Jerusalem',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
 const options=()=>`<option value="" selected disabled>בחרו מי רשם/ה</option>`+STAFF.map(n=>`<option value="${escT(n)}">${escT(n)}</option>`).join('');
 const packTask=(title,body)=>`[[TITLE]]${title}\n[[BODY]]${body}`;
@@ -15,7 +15,7 @@ function inject(){const app=document.getElementById('app');if(!app||document.get
 }
 function updateCounts(){const d=staffTasks.filter(t=>t.audience==='doctors'&&t.status==='open').length,a=staffTasks.filter(t=>t.audience==='assistants'&&t.status==='open').length;const dc=document.getElementById('doctorCount'),ac=document.getElementById('assistantCount');if(dc)dc.textContent=d;if(ac)ac.textContent=a}
 async function loadTasks(){try{const j=await taskApi({action:'list'});staffTasks=j.items||[];updateCounts();renderTaskList()}catch(e){const box=document.getElementById('taskList');if(box)box.innerHTML=`<div class="task-empty">לא הצלחתי לטעון משימות: ${escT(e.message)}</div>`}}
-window.openStaffTasks=async aud=>{currentAudience=aud;taskView='open';document.getElementById('taskTitle').textContent=aud==='doctors'?'תזכורות והודעות לרופאים':'תזכורות והודעות לאסיסטנטיות';document.getElementById('taskAudienceLabel').textContent='מערכת פנימית לצוות — כל שינוי נשמר עם תאריך ושעה';document.getElementById('taskDrawer').classList.add('open');document.getElementById('taskOverlay').classList.add('open');setTaskView('open');await loadTasks()};
+window.openStaffTasks=async aud=>{currentAudience=aud;taskView='open';const drawer=document.getElementById('taskDrawer');drawer.classList.remove('doctors-view','assistants-view');drawer.classList.add(aud==='doctors'?'doctors-view':'assistants-view');document.getElementById('taskTitle').textContent=aud==='doctors'?'תזכורות והודעות לרופאים':'תזכורות והודעות לאסיסטנטיות';document.getElementById('taskAudienceLabel').textContent='מערכת פנימית לצוות — כל שינוי נשמר עם תאריך ושעה';drawer.classList.add('open');document.getElementById('taskOverlay').classList.add('open');setTaskView('open');await loadTasks()};
 window.closeStaffTasks=()=>{document.getElementById('taskDrawer')?.classList.remove('open');document.getElementById('taskOverlay')?.classList.remove('open')};
 window.setTaskView=v=>{taskView=v;document.getElementById('taskOpenBtn')?.classList.toggle('active',v==='open');document.getElementById('taskArchiveBtn')?.classList.toggle('active',v==='closed');renderTaskList()};
 function taskCard(t){const p=unpackTask(t.body);const comments=(t.comments||[]).map(c=>`<div class="comment"><div class="comment-line"><b>${escT(c.author)}</b> — ${escT(c.body)}</div><div class="comment-time">${fmt(c.created_at)}</div></div>`).join('');
