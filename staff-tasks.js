@@ -8,6 +8,7 @@ const options=()=>`<option value="" selected disabled>בחרו מי רשם/ה</o
 const packTask=(title,body)=>`[[TITLE]]${title}\n[[BODY]]${body}`;
 function unpackTask(raw){const s=String(raw||'');const m=s.match(/^\[\[TITLE\]\]([\s\S]*?)\n\[\[BODY\]\]([\s\S]*)$/);return m?{title:m[1].trim(),body:m[2].trim()}:{title:'ללא כותרת',body:s}}
 async function taskApi(body){const r=await fetch(TASK_API,{method:'POST',headers:{'content-type':'application/json','x-clinic-pin':'1016'},body:JSON.stringify(body)});const j=await r.json();if(!r.ok)throw new Error(j.error||'שגיאה');return j}
+function applyUiTweaks(){if(document.getElementById('clinicUiTweaks'))return;const s=document.createElement('style');s.id='clinicUiTweaks';s.textContent='.hero:before,.hero-art{display:none!important}#settingsBtn{font-size:0!important}#settingsBtn:after{content:"עריכה";font-size:13px!important;font-weight:700}';document.head.appendChild(s)}
 function inject(){const app=document.getElementById('app');if(!app||document.getElementById('staffRail'))return;
  const rail=document.createElement('div');rail.id='staffRail';rail.className='staff-rail';rail.innerHTML=`<button class="staff-rail-btn doctors-tab" title="תזכורות והודעות לרופאים" aria-label="תזכורות והודעות לרופאים" onclick="openStaffTasks('doctors')"><span id="doctorCount" class="staff-count">0</span></button><button class="staff-rail-btn assistants-tab" title="תזכורות והודעות לאסיסטנטיות" aria-label="תזכורות והודעות לאסיסטנטיות" onclick="openStaffTasks('assistants')"><span id="assistantCount" class="staff-count">0</span></button>`;app.appendChild(rail);
  const overlay=document.createElement('div');overlay.id='taskOverlay';overlay.className='task-overlay';overlay.onclick=closeStaffTasks;app.appendChild(overlay);
@@ -27,6 +28,6 @@ window.createStaffTask=async()=>{const title=document.getElementById('newTaskTit
 window.addTaskComment=async id=>{const body=document.getElementById('commentBody'+id).value.trim(),author=document.getElementById('commentAuthor'+id).value;if(!body)return alert('צריך לכתוב הערה');if(!author)return alert('חייבים לבחור מי הוסיף/ה את ההערה');try{await taskApi({action:'comment',task_id:id,author,body});await loadTasks()}catch(e){alert('לא הצלחתי להוסיף הערה: '+e.message)}};
 window.closeStaffTask=async id=>{const closed_by=document.getElementById('closeAuthor'+id).value;if(!closed_by)return alert('חייבים לבחור מי סוגר/ת את המשימה');if(!confirm('לסגור את המשימה ולהעביר אותה לארכיון?'))return;try{await taskApi({action:'close',id,closed_by});await loadTasks()}catch(e){alert('לא הצלחתי לסגור: '+e.message)}};
 window.reopenStaffTask=async id=>{try{await taskApi({action:'reopen',id});taskView='open';await loadTasks();setTaskView('open')}catch(e){alert('לא הצלחתי להחזיר את המשימה: '+e.message)}};
-function boot(){inject();loadTasks()}
+function boot(){applyUiTweaks();inject();loadTasks()}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
