@@ -16,6 +16,8 @@ async function post(url,body,withAuth=true){const headers={'content-type':'appli
 async function taskApi(body){return post(TASK_API,body,true)}
 async function secureMainApi(body){return post(MAIN_API,body,true)}
 window.api=secureMainApi;
+window.loadAll=async function(){try{const[a,b]=await Promise.all([secureMainApi({action:'list'}),secureMainApi({action:'price_list'})]);products=a.items||[];prices=b.items||[];fillFilters();renderInventory();renderPrices();renderProductPrices()}catch(e){if(String(e.message).includes('ההתחברות פגה')){showLogin('ההתחברות פגה — התחברי מחדש');return}alert('שגיאה בטעינת הנתונים: '+e.message)}};
+if(sessionStorage.getItem('clinic')==='1')sessionStorage.removeItem('clinic');
 async function validateSession(){const t=token(),exp=localStorage.getItem(EXP_KEY);if(!t||!exp||new Date(exp)<=new Date())return false;try{await post(AUTH_API,{action:'validate'},true);return true}catch{return false}}
 function showLogin(msg=''){document.getElementById('app')?.classList.add('hidden');document.getElementById('login')?.classList.remove('hidden');const e=document.getElementById('loginErr');if(e)e.textContent=msg;sessionStorage.removeItem('clinic')}
 function showApp(){document.getElementById('login')?.classList.add('hidden');document.getElementById('app')?.classList.remove('hidden');sessionStorage.setItem('clinic','secure');try{window.loadAll?.()}catch{}startExtras()}
