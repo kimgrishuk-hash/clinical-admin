@@ -1,4 +1,18 @@
 (()=>{
+  const backgrounds=[
+    'linear-gradient(145deg,#e9f5ff,#dff0ff)',
+    'linear-gradient(145deg,#eefaf1,#dff5e6)',
+    'linear-gradient(145deg,#fff0f5,#ffe2ec)',
+    'linear-gradient(145deg,#fff7e8,#ffedc9)',
+    'linear-gradient(145deg,#f5f0ff,#e9e0ff)',
+    'linear-gradient(145deg,#ebfbfa,#daf4f1)',
+    'linear-gradient(145deg,#fff1eb,#ffe1d5)',
+    'linear-gradient(145deg,#eef3ff,#dfe8ff)',
+    'linear-gradient(145deg,#f4f9ea,#e6f2cf)',
+    'linear-gradient(145deg,#fff4fc,#f5e2f3)'
+  ];
+  const badges=['#e6f3fe','#e8f6ec','#ffebf2','#fff0d7','#eee7ff','#e1f6f3','#ffe9df','#e7edff','#ebf4d9','#f8e9f6'];
+
   const toneForCategory=(category)=>{
     const s=String(category||'אחר').trim().toLowerCase();
     let h=2166136261;
@@ -6,14 +20,18 @@
       h^=s.charCodeAt(i);
       h=Math.imul(h,16777619);
     }
-    return Math.abs(h)%10;
+    return Math.abs(h)%backgrounds.length;
   };
 
   function applyCategoryColors(){
     document.querySelectorAll('#inventoryGrid .product').forEach(card=>{
       const cat=card.querySelector('.cat')?.textContent?.trim()||'אחר';
-      card.dataset.categoryTone=String(toneForCategory(cat));
+      const tone=toneForCategory(cat);
+      card.dataset.categoryTone=String(tone);
       card.dataset.categoryName=cat;
+      card.style.setProperty('--badge-tint',badges[tone]);
+      const pic=card.querySelector('.pic');
+      if(pic)pic.style.setProperty('background',backgrounds[tone],'important');
     });
   }
 
