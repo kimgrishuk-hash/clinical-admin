@@ -1,28 +1,27 @@
-/* Different pastel image background for every visible inventory card — independent of category */
+/* Pastel inventory colors: every product in the SAME category gets the SAME image background */
 #inventoryGrid .product .pic{position:relative;isolation:isolate;overflow:hidden;background:#f4f9fd!important;transition:background .18s ease}
 #inventoryGrid .product .pic::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(circle at 18% 16%,rgba(255,255,255,.82),transparent 34%),radial-gradient(circle at 82% 78%,rgba(255,255,255,.42),transparent 38%)}
-#inventoryGrid .product:nth-child(10n+1) .pic{background:linear-gradient(145deg,#e9f5ff,#dff0ff)!important}
-#inventoryGrid .product:nth-child(10n+2) .pic{background:linear-gradient(145deg,#eefaf1,#dff5e6)!important}
-#inventoryGrid .product:nth-child(10n+3) .pic{background:linear-gradient(145deg,#fff0f5,#ffe2ec)!important}
-#inventoryGrid .product:nth-child(10n+4) .pic{background:linear-gradient(145deg,#fff7e8,#ffedc9)!important}
-#inventoryGrid .product:nth-child(10n+5) .pic{background:linear-gradient(145deg,#f5f0ff,#e9e0ff)!important}
-#inventoryGrid .product:nth-child(10n+6) .pic{background:linear-gradient(145deg,#ebfbfa,#daf4f1)!important}
-#inventoryGrid .product:nth-child(10n+7) .pic{background:linear-gradient(145deg,#fff1eb,#ffe1d5)!important}
-#inventoryGrid .product:nth-child(10n+8) .pic{background:linear-gradient(145deg,#eef3ff,#dfe8ff)!important}
-#inventoryGrid .product:nth-child(10n+9) .pic{background:linear-gradient(145deg,#f4f9ea,#e6f2cf)!important}
-#inventoryGrid .product:nth-child(10n+10) .pic{background:linear-gradient(145deg,#fff4fc,#f5e2f3)!important}
 
-/* Keep the image itself clean and readable on all tints */
+#inventoryGrid .product[data-category-tone="0"] .pic{background:linear-gradient(145deg,#e9f5ff,#dff0ff)!important}
+#inventoryGrid .product[data-category-tone="1"] .pic{background:linear-gradient(145deg,#eefaf1,#dff5e6)!important}
+#inventoryGrid .product[data-category-tone="2"] .pic{background:linear-gradient(145deg,#fff0f5,#ffe2ec)!important}
+#inventoryGrid .product[data-category-tone="3"] .pic{background:linear-gradient(145deg,#fff7e8,#ffedc9)!important}
+#inventoryGrid .product[data-category-tone="4"] .pic{background:linear-gradient(145deg,#f5f0ff,#e9e0ff)!important}
+#inventoryGrid .product[data-category-tone="5"] .pic{background:linear-gradient(145deg,#ebfbfa,#daf4f1)!important}
+#inventoryGrid .product[data-category-tone="6"] .pic{background:linear-gradient(145deg,#fff1eb,#ffe1d5)!important}
+#inventoryGrid .product[data-category-tone="7"] .pic{background:linear-gradient(145deg,#eef3ff,#dfe8ff)!important}
+#inventoryGrid .product[data-category-tone="8"] .pic{background:linear-gradient(145deg,#f4f9ea,#e6f2cf)!important}
+#inventoryGrid .product[data-category-tone="9"] .pic{background:linear-gradient(145deg,#fff4fc,#f5e2f3)!important}
+
 #inventoryGrid .product .pic img{position:relative;z-index:1;filter:drop-shadow(0 8px 12px rgba(34,62,87,.10))!important}
 
-/* Match the category pill to each card without tying color to the category name */
-#inventoryGrid .product:nth-child(10n+1){--badge-tint:#e6f3fe}
-#inventoryGrid .product:nth-child(10n+2){--badge-tint:#e8f6ec}
-#inventoryGrid .product:nth-child(10n+3){--badge-tint:#ffebf2}
-#inventoryGrid .product:nth-child(10n+4){--badge-tint:#fff0d7}
-#inventoryGrid .product:nth-child(10n+5){--badge-tint:#eee7ff}
-#inventoryGrid .product:nth-child(10n+6){--badge-tint:#e1f6f3}
-#inventoryGrid .product:nth-child(10n+7){--badge-tint:#ffe9df}
-#inventoryGrid .product:nth-child(10n+8){--badge-tint:#e7edff}
-#inventoryGrid .product:nth-child(10n+9){--badge-tint:#ebf4d9}
-#inventoryGrid .product:nth-child(10n+10){--badge-tint:#f8e9f6}
+#inventoryGrid .product[data-category-tone="0"]{--badge-tint:#e6f3fe}
+#inventoryGrid .product[data-category-tone="1"]{--badge-tint:#e8f6ec}
+#inventoryGrid .product[data-category-tone="2"]{--badge-tint:#ffebf2}
+#inventoryGrid .product[data-category-tone="3"]{--badge-tint:#fff0d7}
+#inventoryGrid .product[data-category-tone="4"]{--badge-tint:#eee7ff}
+#inventoryGrid .product[data-category-tone="5"]{--badge-tint:#e1f6f3}
+#inventoryGrid .product[data-category-tone="6"]{--badge-tint:#ffe9df}
+#inventoryGrid .product[data-category-tone="7"]{--badge-tint:#e7edff}
+#inventoryGrid .product[data-category-tone="8"]{--badge-tint:#ebf4d9}
+#inventoryGrid .product[data-category-tone="9"]{--badge-tint:#f8e9f6}
