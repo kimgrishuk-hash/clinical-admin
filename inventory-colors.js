@@ -1,4 +1,11 @@
 (()=>{
+  if(!document.querySelector('script[data-assistant-center]')){
+    const s=document.createElement('script');
+    s.src='assistant-center.js?v=1';
+    s.dataset.assistantCenter='1';
+    document.body.appendChild(s);
+  }
+
   const backgrounds=[
     'linear-gradient(145deg,#e9f5ff,#dff0ff)',
     'linear-gradient(145deg,#eefaf1,#dff5e6)',
