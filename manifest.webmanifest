@@ -1,0 +1,15 @@
+{
+  "name":"מערכת ניהול המרפאה",
+  "short_name":"המרפאה",
+  "description":"מערכת ניהול פנימית לצוות המרפאה",
+  "lang":"he",
+  "dir":"rtl",
+  "start_url":"/",
+  "scope":"/",
+  "display":"standalone",
+  "background_color":"#f6f9fc",
+  "theme_color":"#173f73",
+  "icons":[
+    {"src":"/clinic-app-icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
+  ]
+}
