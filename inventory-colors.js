@@ -11,6 +11,12 @@
     s.dataset.foodbagsList='1';
     document.body.appendChild(s);
   }
+  if(!document.querySelector('script[data-supplier-orders]')){
+    const s=document.createElement('script');
+    s.src='supplier-orders.js?v=1';
+    s.dataset.supplierOrders='1';
+    document.body.appendChild(s);
+  }
 
   const backgrounds=[
     'linear-gradient(145deg,#e9f5ff,#dff0ff)',
@@ -22,7 +28,8 @@
     'linear-gradient(145deg,#fff1eb,#ffe1d5)',
     'linear-gradient(145deg,#eef3ff,#dfe8ff)',
     'linear-gradient(145deg,#f4f9ea,#e6f2cf)',
-    'linear-gradient(145deg,#fff4fc,#f5e2f3)'
+    'linear-gradient(145deg,#fff4fc,#f5e2f3)',
+    'linear-gradient(145deg,#eaf7ff,#dcefff)'
   ];
   const badges=['#e6f3fe','#e8f6ec','#ffebf2','#fff0d7','#eee7ff','#e1f6f3','#ffe9df','#e7edff','#ebf4d9','#f8e9f6'];
 
@@ -42,7 +49,7 @@
       const tone=toneForCategory(cat);
       card.dataset.categoryTone=String(tone);
       card.dataset.categoryName=cat;
-      card.style.setProperty('--badge-tint',badges[tone]);
+      card.style.setProperty('--badge-tint',badges[tone%badges.length]);
       const pic=card.querySelector('.pic');
       if(pic)pic.style.setProperty('background',backgrounds[tone],'important');
     });
