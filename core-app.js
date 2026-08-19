@@ -1,40 +1,84 @@
-const MAIN_API_URL='https://bhvkhxmexyhsjhwjsytp.supabase.co/functions/v1/clinic-api';
-const LOGIN_API_URL='https://bhvkhxmexyhsjhwjsytp.supabase.co/functions/v1/clinic-auth';
-const SESSION_TOKEN_KEY='clinic_session_token',SESSION_EXP_KEY='clinic_session_expires';
-let products=[],prices=[],productImageData='',priceMode='procedures',settingsMode=false;
-const $=id=>document.getElementById(id);
-const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-const sessionToken=()=>localStorage.getItem(SESSION_TOKEN_KEY)||'';
-async function postJson(url,body,withAuth=true){const headers={'content-type':'application/json'};if(withAuth)headers.authorization='Bearer '+sessionToken();const r=await fetch(url,{method:'POST',headers,body:JSON.stringify(body),cache:'no-store'});let j={};try{j=await r.json()}catch{}if(!r.ok)throw new Error(j.error||'שגיאה');return j}
-async function api(body){return postJson(MAIN_API_URL,body,true)}
-function showLogin(msg=''){ $('app')?.classList.add('hidden');$('login')?.classList.remove('hidden');if($('loginErr'))$('loginErr').textContent=msg }
-function showApp(){ $('login')?.classList.add('hidden');$('app')?.classList.remove('hidden');loadAll() }
-async function login(){const password=$('pin')?.value||'';const btn=document.querySelector('#login button');if(!password)return showLogin('צריך להזין סיסמה');if(btn){btn.disabled=true;btn.textContent='מתחברת...'}try{const j=await postJson(LOGIN_API_URL,{action:'login',password},false);localStorage.setItem(SESSION_TOKEN_KEY,j.token);localStorage.setItem(SESSION_EXP_KEY,j.expires_at);if($('pin'))$('pin').value='';showApp()}catch(e){showLogin(e.message==='too many attempts'?'יותר מדי ניסיונות. נסי שוב בעוד כמה דקות.':'סיסמה לא נכונה')}finally{if(btn){btn.disabled=false;btn.textContent='כניסה למערכת'}}}
-async function logout(){try{if(sessionToken())await postJson(LOGIN_API_URL,{action:'logout'},true)}catch{}localStorage.removeItem(SESSION_TOKEN_KEY);localStorage.removeItem(SESSION_EXP_KEY);location.reload()}
-async function restoreSession(){const t=sessionToken(),exp=localStorage.getItem(SESSION_EXP_KEY);if(!t||!exp||new Date(exp)<=new Date()){localStorage.removeItem(SESSION_TOKEN_KEY);localStorage.removeItem(SESSION_EXP_KEY);return showLogin()}try{await postJson(LOGIN_API_URL,{action:'validate'},true);showApp()}catch{localStorage.removeItem(SESSION_TOKEN_KEY);localStorage.removeItem(SESSION_EXP_KEY);showLogin('ההתחברות פגה — התחברי מחדש')}}
-function toggleSettings(){settingsMode=!settingsMode;$('settingsBtn').classList.toggle('settings-on',settingsMode);$('settingsBtn').textContent=settingsMode?'✅ יציאה מהגדרות':'⚙️ הגדרות עריכה';$('settingsNote').classList.toggle('hidden',!settingsMode);$('newProductBtn').classList.toggle('hidden',!settingsMode);$('newFoodProductBtn').classList.toggle('hidden',!settingsMode);$('newPriceBtn').classList.toggle('hidden',!settingsMode);if(!settingsMode){closeProduct();closePrice()}renderInventory();renderPrices();renderProductPrices()}
-async function loadAll(){try{const[a,b]=await Promise.all([api({action:'list'}),api({action:'price_list'})]);products=a.items||[];prices=b.items||[];fillFilters();renderInventory();renderPrices();renderProductPrices()}catch(e){if(e.message==='unauthorized')return showLogin('ההתחברות פגה — התחברי מחדש');alert('שגיאה בטעינת הנתונים: '+e.message)}}
-function fillFilters(){const a=[...new Set(products.filter(x=>x.category!=='שקי אוכל').map(x=>x.category).filter(Boolean))].sort(),b=[...new Set(prices.map(x=>x.category).filter(Boolean))].sort();$('inventoryCategory').innerHTML='<option value="">כל הקטגוריות</option>'+a.map(c=>`<option>${esc(c)}</option>`).join('');$('priceCategory').innerHTML='<option value="">כל הקטגוריות</option>'+b.map(c=>`<option>${esc(c)}</option>`).join('')}
-function showTab(id,btn){document.querySelectorAll('.panel').forEach(x=>x.classList.add('hidden'));$(id)?.classList.remove('hidden');document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));btn?.classList.add('active');$('globalResults')?.classList.add('hidden');if(id==='foodbags')renderFoodBags()}
-function renderGlobal(){const q=$('globalSearch').value.trim().toLowerCase(),box=$('globalResults');if(!q){box.classList.add('hidden');return}let out=[];products.filter(x=>(x.name+' '+(x.category||'')+' '+(x.details||'')).toLowerCase().includes(q)).slice(0,10).forEach(x=>out.push(`<div class="result" onclick="jumpProduct(${x.id})"><b>${x.category==='שקי אוכל'?'שק אוכל':'מוצר'}:</b> ${esc(x.name)}</div>`));prices.filter(x=>(x.name+' '+(x.category||'')+' '+(x.note||'')).toLowerCase().includes(q)).slice(0,10).forEach(x=>out.push(`<div class="result" onclick="jumpPrice(${x.id})"><b>מחירון:</b> ${esc(x.name)}</div>`));box.innerHTML=out.length?out.join(''):'<div class="result muted">לא נמצאו תוצאות</div>';box.classList.remove('hidden')}
-function jumpProduct(id){const x=products.find(x=>x.id===id);if(x?.category==='שקי אוכל'){showTab('foodbags',document.querySelector('[data-tab="foodbags"]'));$('foodSearch').value=x?.name||'';renderFoodBags()}else{showTab('inventory',document.querySelector('[data-tab="inventory"]'));$('inventorySearch').value=x?.name||'';renderInventory()}$('globalSearch').value='';$('globalResults').classList.add('hidden')}
-function jumpPrice(id){showTab('prices',document.querySelector('[data-tab="prices"]'));showPriceMode('procedures');$('priceSearch').value=prices.find(x=>x.id===id)?.name||'';renderPrices();$('globalSearch').value='';$('globalResults').classList.add('hidden')}
-function productCard(x,editable){const cur=Number(x.current_qty||0),tar=Number(x.target_qty||0),status=tar>0&&cur<tar?'low':'ok';const price=x.price_ils==null?'<div class="missing-price">⚠️ אין מחיר — צריך לתקן</div>':`<div class="price">${Number(x.price_ils).toLocaleString('he-IL')} ₪</div>`;return `<article class="card product"><div class="pic">${x.image_url?`<img src="${x.image_url}" alt="${esc(x.name)}">`:'📦'}</div><div class="product-info"><h3>${esc(x.name)}</h3><div class="muted cat">${esc(x.category||'')}</div>${price}<div class="stockbox"><div class="stockline"><span class="target">אמור להיות: ${tar}</span><div class="qtycontrol"><button class="qtybtn" onclick="adjustQty(${x.id},-1)" aria-label="הורד">−</button><span class="qtynum ${status}">${cur}</span><button class="qtybtn" onclick="adjustQty(${x.id},1)" aria-label="הוסף">+</button></div></div></div>${editable?`<button class="btn editbtn" onclick="openProduct(${x.id})">עריכת מוצר</button>`:''}</div></article>`}
-function renderFoodBags(){const input=$('foodSearch');if(!input||!$('foodGrid'))return;const q=input.value.trim().toLowerCase(),arr=products.filter(x=>x.category==='שקי אוכל'&&(!q||(x.name+' '+(x.details||'')).toLowerCase().includes(q)));$('foodGrid').innerHTML=arr.map(x=>productCard(x,settingsMode)).join('')||'<p class="muted">אין תוצאות</p>'}
-function renderInventory(){const q=$('inventorySearch').value.trim().toLowerCase(),cat=$('inventoryCategory').value,arr=products.filter(x=>x.category!=='שקי אוכל'&&(!cat||x.category===cat)&&(!q||(x.name+' '+(x.category||'')+' '+(x.details||'')).toLowerCase().includes(q)));$('inventoryGrid').innerHTML=arr.map(x=>productCard(x,settingsMode)).join('')||'<p class="muted">אין תוצאות</p>';renderFoodBags()}
-async function adjustQty(id,delta){try{const j=await api({action:'qty_adjust',id,delta});const i=products.findIndex(x=>x.id===id);if(i>=0)products[i]=j.item;renderInventory();if(priceMode==='products')renderProductPrices()}catch(e){alert('לא הצלחתי לעדכן כמות: '+e.message)}}
-function openFoodProduct(){openProduct();$('prodCat').value='שקי אוכל'}
-function openProduct(id){if(!settingsMode)return;const x=products.find(y=>y.id===id);$('prodId').value=x?.id||'';$('prodName').value=x?.name||'';$('prodCat').value=x?.category||'';$('prodPrice').value=x?.price_ils??'';$('prodTarget').value=x?.target_qty??0;$('prodCurrent').value=x?.current_qty??0;$('prodDetails').value=x?.details||'';productImageData=x?.image_url||'';$('prodDelete').classList.toggle('hidden',!x);$('productForm').classList.remove('hidden');$('productForm').scrollIntoView({behavior:'smooth'})}
-function closeProduct(){$('productForm').classList.add('hidden')}
-function readProductImage(e){const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>productImageData=String(r.result);r.readAsDataURL(f)}
-async function saveProduct(){const id=$('prodId').value,item={name:$('prodName').value.trim(),category:$('prodCat').value.trim()||'אחר',price_ils:$('prodPrice').value,details:$('prodDetails').value,image_url:productImageData||null,target_qty:$('prodTarget').value,current_qty:$('prodCurrent').value};if(!item.name)return alert('צריך שם מוצר');await api({action:id?'update':'create',id,item});closeProduct();await loadAll()}
-async function deleteProduct(){const id=$('prodId').value;if(id&&confirm('למחוק את המוצר?')){await api({action:'delete',id});closeProduct();await loadAll()}}
-function showPriceMode(mode){priceMode=mode;$('procBtn').classList.toggle('active',mode==='procedures');$('productsBtn').classList.toggle('active',mode==='products');$('procedureTools').classList.toggle('hidden',mode!=='procedures');$('procedurePriceList').classList.toggle('hidden',mode!=='procedures');$('productPriceList').classList.toggle('hidden',mode!=='products');$('priceForm').classList.add('hidden');if(mode==='products')renderProductPrices()}
-function money(v){return Number(v).toLocaleString('he-IL',{maximumFractionDigits:2})+' ₪'}function memberMoney(v){return Math.ceil(Number(v)).toLocaleString('he-IL')+' ₪'}function range(a,b){return b!=null&&Number(b)!==Number(a)?money(a)+'–'+money(b):money(a)}function regularRange(x){if(Number(x.regular_price_min)===0)return 'לפי הערה';return range(x.regular_price_min,x.regular_price_max)}function memberRange(x){if(Number(x.regular_price_min)===0)return '—';const d=(100-Number(x.discount_percent??20))/100;return x.regular_price_max!=null&&Number(x.regular_price_max)!==Number(x.regular_price_min)?memberMoney(Number(x.regular_price_min)*d)+'–'+memberMoney(Number(x.regular_price_max)*d):memberMoney(Number(x.regular_price_min)*d)}
-function renderPrices(){const q=$('priceSearch').value.trim().toLowerCase(),cat=$('priceCategory').value,arr=prices.filter(x=>(!cat||x.category===cat)&&(!q||(x.name+' '+(x.category||'')+' '+(x.note||'')).toLowerCase().includes(q))),groups={};arr.forEach(x=>(groups[x.category]??=[]).push(x));$('procedurePriceList').innerHTML=Object.keys(groups).sort().map(c=>`<div class="card pricegroup"><h3>${esc(c)}</h3>${groups[c].map(x=>`<div class="price-row"><div class="name"><b>${esc(x.name)}</b>${x.note?`<div class="muted">${esc(x.note)}</div>`:''}</div><div><span class="muted">רגיל:</span> <b>${regularRange(x)}</b></div><div class="member">מנוי זהב: ${memberRange(x)}</div>${settingsMode?`<button class="btn" onclick="openPrice(${x.id})">עריכה</button>`:''}</div>`).join('')}</div>`).join('')||'<p class="muted">אין תוצאות</p>'}
-function renderProductPrices(){$('productPriceList').innerHTML=products.map(x=>productCard(x,settingsMode)).join('')}
-function openPrice(id){if(!settingsMode)return;const x=prices.find(y=>y.id===id);$('priceId').value=x?.id||'';$('priceName').value=x?.name||'';$('priceCat').value=x?.category||'';$('priceMin').value=x?.regular_price_min??'';$('priceMax').value=x?.regular_price_max??'';$('priceDiscount').value=x?.discount_percent??20;$('priceNote').value=x?.note||'';$('priceDelete').classList.toggle('hidden',!x);$('priceForm').classList.remove('hidden');$('priceForm').scrollIntoView({behavior:'smooth'})}
-function closePrice(){$('priceForm').classList.add('hidden')}
-async function savePrice(){const id=$('priceId').value,item={name:$('priceName').value.trim(),category:$('priceCat').value.trim()||'שונות',regular_price_min:$('priceMin').value,regular_price_max:$('priceMax').value,discount_percent:$('priceDiscount').value||20,note:$('priceNote').value};if(!item.name||$('priceMin').value==='')return alert('צריך שם ומחיר');await api({action:id?'price_update':'price_create',id,item});closePrice();await loadAll()}
-async function deletePrice(){const id=$('priceId').value;if(id&&confirm('למחוק את השורה מהמחירון?')){await api({action:'price_delete',id});closePrice();await loadAll()}}
-$('pin')?.addEventListener('keydown',e=>{if(e.key==='Enter')login()});document.addEventListener('click',e=>{if(!e.target.closest('.global'))$('globalResults')?.classList.add('hidden')});restoreSession();
+(()=>{
+  const EDGE='https://bhvkhxmexyhsjhwjsytp.supabase.co/functions/v1/';
+  const MAP=new Map([
+    [EDGE+'clinic-auth','/api/session'],
+    [EDGE+'clinic-api','/api/clinic'],
+    [EDGE+'clinic-tasks','/api/tasks'],
+    [EDGE+'clinic-ops','/api/ops'],
+    [EDGE+'clinic-assistant','/api/assistant'],
+    [EDGE+'clinic-files','/api/files']
+  ]);
+  const nativeFetch=window.fetch.bind(window);
+  window.fetch=function(input,init={}){
+    const url=typeof input==='string'?input:String(input?.url||'');
+    const mapped=MAP.get(url);
+    if(!mapped)return nativeFetch(input,init);
+    const h=new Headers(init.headers||(typeof input!=='string'?input.headers:undefined)||{});
+    h.delete('authorization');h.delete('apikey');h.delete('x-clinic-pin');
+    return nativeFetch(mapped,{...init,headers:h,credentials:'same-origin'});
+  };
+  const tk=localStorage.getItem('clinic_session_token');
+  if(tk&&tk!=='http-only-cookie'){
+    localStorage.removeItem('clinic_session_token');
+    localStorage.removeItem('clinic_session_expires');
+  }
+
+  const SAFE_EXACT=new Set([
+    'login','logout','toggleSettings','renderGlobal','showTab','readProductImage','saveProduct','closeProduct','deleteProduct','openProduct','renderInventory','renderFoodBags','openFoodProduct','showPriceMode','renderPrices','openPrice','savePrice','closePrice','deletePrice','adjustQty','jumpProduct','jumpPrice','showInventoryMode',
+    'openDailyBoard','closeDailyBoard','setDailyMode','saveDailyTask','clearDailyForm','toggleDaily','editDaily','deleteDaily','reopenOnce','completeOnce',
+    'openStaffTasks','closeStaffTasks','createStaffTask','setTaskView','deleteStaffTask','reopenStaffTask','addTaskComment','closeStaffTask',
+    'renderSubscriptions','jumpSubscription','openProtocolEditor','addProtocolField','removeProtocolField','addTemplateCharge','removeTemplateCharge','showTemplateCatalog','pickTemplateCatalog','addTemplateClaim','removeTemplateClaim','closeProtocolEditor','saveProtocol','deleteProtocol','editProtocol','startProtocolRun','closeProtocolRun','addRunLine','removeRunLine','updateRunLine','showRunCatalog','pickRunCatalog','setRunPlan','setRunOverride','addInjectionQuick'
+  ]);
+  const SAFE_PREFIX=/^(clinic|ops|assistant|supplier|foodBag|simulation)/;
+  const isSafeName=n=>SAFE_EXACT.has(n)||SAFE_PREFIX.test(n);
+  function splitArgs(s){
+    const out=[];let cur='',q='',esc=false;
+    for(const ch of s){
+      if(esc){cur+=ch;esc=false;continue}
+      if(ch==='\\'){cur+=ch;esc=true;continue}
+      if(q){cur+=ch;if(ch===q)q='';continue}
+      if(ch==='\''||ch==='"'){q=ch;cur+=ch;continue}
+      if(ch===','){out.push(cur.trim());cur='';continue}
+      cur+=ch;
+    }
+    if(cur.trim()||s.trim()==='')out.push(cur.trim());
+    return out.filter((x,i)=>x!==''||i===0&&s.trim()!=='');
+  }
+  function argValue(raw,el,ev){
+    const s=raw.trim();
+    if(s==='this')return el;if(s==='event')return ev;if(s==='this.value')return el.value;if(s==='this.checked')return !!el.checked;
+    if(s==='true')return true;if(s==='false')return false;if(s==='null')return null;if(s==='undefined')return undefined;
+    if(/^-?\d+(?:\.\d+)?$/.test(s))return Number(s);
+    if((s.startsWith("'")&&s.endsWith("'"))||(s.startsWith('"')&&s.endsWith('"'))){
+      const body=s.slice(1,-1);return body.replace(/\\'/g,"'").replace(/\\"/g,'"').replace(/\\\\/g,'\\');
+    }
+    throw new Error('unsupported argument');
+  }
+  function runCall(code,el,ev){
+    const m=String(code||'').trim().match(/^([A-Za-z_$][\w$]*)\((.*)\)$/s);if(!m||!isSafeName(m[1]))return false;
+    const fn=window[m[1]];if(typeof fn!=='function')return false;
+    const args=m[2].trim()?splitArgs(m[2]).map(a=>argValue(a,el,ev)):[];
+    fn(...args);return true;
+  }
+  function runSafeHandler(code,el,ev){
+    const c=String(code||'').trim();
+    let m=c.match(/^_protocolDraft\.fields\[(\d+)\]\.(label|value)=this\.value$/);
+    if(m&&window._protocolDraft?.fields?.[+m[1]]){window._protocolDraft.fields[+m[1]][m[2]]=el.value;return true}
+    m=c.match(/^_protocolDraft\.charges\[(\d+)\]\.(name|price)=this\.value(?:;showTemplateCatalog\((\d+),this\.value\))?$/);
+    if(m&&window._protocolDraft?.charges?.[+m[1]]){window._protocolDraft.charges[+m[1]][m[2]]=el.value;if(m[3]!=null&&typeof window.showTemplateCatalog==='function')window.showTemplateCatalog(+m[3],el.value);return true}
+    m=c.match(/^_protocolDraft\.marpetClaims\[(\d+)\]\.(name|percent|instructions)=this\.value$/);
+    if(m&&window._protocolDraft?.marpetClaims?.[+m[1]]){window._protocolDraft.marpetClaims[+m[1]][m[2]]=el.value;return true}
+    m=c.match(/^activeRun\.lines\[(\d+)\]\.marpetEligible=this\.checked;renderRunTotals\(\)$/);
+    if(m&&window.activeRun?.lines?.[+m[1]]){window.activeRun.lines[+m[1]].marpetEligible=!!el.checked;if(typeof window.renderRunTotals==='function')window.renderRunTotals();return true}
+    return runCall(c,el,ev);
+  }
+  document.addEventListener('click',ev=>{
+    const el=ev.target?.closest?.('[onclick]');if(!el)return;
+    try{if(runSafeHandler(el.getAttribute('onclick'),el,ev)){ev.preventDefault();ev.stopPropagation()}}catch(e){console.warn('blocked inline action',e)}
+  },true);
+  document.addEventListener('input',ev=>{const el=ev.target;if(!(el instanceof Element)||!el.hasAttribute('oninput'))return;try{runSafeHandler(el.getAttribute('oninput'),el,ev)}catch(e){console.warn('blocked inline input',e)}},true);
+  document.addEventListener('change',ev=>{const el=ev.target;if(!(el instanceof Element)||!el.hasAttribute('onchange'))return;try{runSafeHandler(el.getAttribute('onchange'),el,ev)}catch(e){console.warn('blocked inline change',e)}},true);
+  document.addEventListener('error',ev=>{const el=ev.target;if(el instanceof HTMLImageElement&&el.hasAttribute('onerror')){el.style.display='none';const n=el.nextElementSibling;if(n)n.style.display='block'}},true);
+})();
+
+document.write('<script src="core-app-legacy.js?v=2"><\\/script>');
