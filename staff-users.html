@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ניהול משתמשים | מערכת המרפאה</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f4f7fa;color:#22364a;font-family:Arial,sans-serif}.shell{max-width:1000px;margin:auto;padding:18px}.top{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px}h1{margin:0;color:#173a5f}.back{color:#2f6fa8;text-decoration:none;font-weight:800}.card{background:#fff;border:1px solid #dbe3e9;border-radius:14px;box-shadow:0 5px 18px rgba(28,55,82,.05);padding:18px;margin:12px 0}.muted{color:#75899d}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}label{font-size:12px;font-weight:800;display:block;margin:3px 0 5px}input,select{width:100%;padding:11px 12px;border:1px solid #d7e1e9;border-radius:9px;background:#fff;font:inherit}.full{grid-column:1/-1}.btn{border:0;border-radius:9px;padding:10px 13px;background:#2f6fa8;color:#fff;font:inherit;font-weight:800;cursor:pointer}.btn.secondary{background:#edf3f8;color:#315a7e}.btn.danger{background:#fff0f1;color:#a6323f}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.user{display:grid;grid-template-columns:1.4fr .8fr .7fr auto;gap:10px;align-items:center;padding:13px 0;border-top:1px solid #edf2f5}.user:first-child{border-top:0}.badge{display:inline-block;border-radius:999px;padding:4px 8px;background:#edf3f8;font-size:11px;font-weight:800}.inactive{opacity:.55}.error{color:#b52d3b}.ok{color:#287a61}.modal{position:fixed;inset:0;background:rgba(20,40,60,.28);display:none;place-items:center;padding:16px}.modal.open{display:grid}.modal .card{width:min(420px,100%);margin:0}.modal input{margin:7px 0}@media(max-width:700px){.grid{grid-template-columns:1fr}.full{grid-column:auto}.user{grid-template-columns:1fr}.user .row{justify-content:flex-start}}
+</style>
+</head>
+<body>
+<div class="shell">
+<div class="top"><div><h1>ניהול משתמשי צוות</h1><div class="muted">גישה לאדמין בלבד</div></div><a class="back" href="/">חזרה למערכת ←</a></div>
+<div id="status" class="card">בודקת הרשאה...</div>
+<section id="content" hidden>
+<div class="card"><h2 style="margin-top:0">הוספת משתמש</h2><div class="grid"><div><label>שם מלא</label><input id="display" placeholder="למשל קים"></div><div><label>שם משתמש באנגלית</label><input id="username" placeholder="kim" maxlength="40"></div><div><label>תפקיד</label><select id="role"><option value="assistant">אסיסטנטית</option><option value="doctor">רופא/ה</option><option value="admin">אדמין</option></select></div><div><label>סיסמה זמנית</label><input id="password" type="password" minlength="10" maxlength="128" placeholder="לפחות 10 תווים"></div><div class="full row"><button class="btn" onclick="createUser()">יצירת משתמש</button><span id="createMsg"></span></div></div></div>
+<div class="card"><div class="row" style="justify-content:space-between"><h2 style="margin:0">משתמשים</h2><button class="btn secondary" onclick="loadUsers()">רענון</button></div><div id="users"></div></div>
+</section>
+</div>
+<div id="resetModal" class="modal" onclick="if(event.target===this)closeReset()"><div class="card"><h3 style="margin-top:0">איפוס סיסמה</h3><div id="resetName" class="muted"></div><input id="resetPassword" type="password" minlength="10" maxlength="128" placeholder="סיסמה חדשה — לפחות 10 תווים"><div class="row"><button class="btn" onclick="doReset()">שמירה</button><button class="btn secondary" onclick="closeReset()">ביטול</button></div><div id="resetMsg"></div></div></div>
+<script>
+const AUTH='https://bhvkhxmexyhsjhwjsytp.supabase.co/functions/v1/clinic-auth';
+const TOKEN_KEY='clinic_session_token',EXP_KEY='clinic_session_expires';let users=[],resetId=null;
+const $=id=>document.getElementById(id);const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+async function call(body){const token=localStorage.getItem(TOKEN_KEY)||'';const r=await fetch(AUTH,{method:'POST',headers:{'content-type':'application/json','authorization':'Bearer '+token},body:JSON.stringify(body),cache:'no-store'});let j={};try{j=await r.json()}catch{}if(!r.ok)throw new Error(j.error||'שגיאה');return j}
+const roleName=r=>r==='admin'?'אדמין':r==='doctor'?'רופא/ה':'אסיסטנטית';
+async function boot(){const token=localStorage.getItem(TOKEN_KEY),exp=localStorage.getItem(EXP_KEY);if(!token||!exp||new Date(exp)<=new Date()){location.replace('/secure-login.html');return}try{await call({action:'validate'});await loadUsers();$('status').hidden=true;$('content').hidden=false}catch(e){$('status').innerHTML=e.message==='forbidden'?'<b>אין הרשאת אדמין.</b><div class="muted">רק אדמין יכול לנהל משתמשים.</div>':'<b>צריך להתחבר מחדש.</b>';if(e.message!=='forbidden')setTimeout(()=>location.replace('/secure-login.html'),900)}}
+async function loadUsers(){const j=await call({action:'users_list'});users=j.items||[];$('users').innerHTML=users.length?users.map(u=>`<div class="user ${u.active?'':'inactive'}"><div><b>${esc(u.display_name)}</b><div class="muted">@${esc(u.username)}</div></div><div><span class="badge">${roleName(u.role)}</span></div><div>${u.active?'פעיל':'מושבת'}</div><div class="row"><button class="btn secondary" onclick="openReset(${u.id})">איפוס סיסמה</button><button class="btn ${u.active?'danger':'secondary'}" onclick="setActive(${u.id},${!u.active})">${u.active?'השבתה':'הפעלה'}</button></div></div>`).join(''):'<p class="muted">עדיין אין משתמשים אישיים.</p>'}
+async function createUser(){const display=$('display').value.trim(),username=$('username').value.trim().toLowerCase(),role=$('role').value,password=$('password').value,msg=$('createMsg');msg.className='';msg.textContent='';if(!display||!username||password.length<10){msg.className='error';msg.textContent='צריך שם, שם משתמש וסיסמה של לפחות 10 תווים';return}try{await call({action:'user_create',display_name:display,username,role,password});$('display').value='';$('username').value='';$('password').value='';msg.className='ok';msg.textContent='המשתמש נוצר';await loadUsers()}catch(e){msg.className='error';msg.textContent=e.message==='create failed'?'שם המשתמש כבר קיים או שהנתונים לא תקינים':e.message}}
+async function setActive(id,active){const u=users.find(x=>x.id===id);if(!confirm(`${active?'להפעיל':'להשבית'} את המשתמש של ${u?.display_name||''}?`))return;try{await call({action:'user_set_active',id,active});await loadUsers()}catch(e){alert('לא הצלחתי לשנות את המשתמש: '+e.message)}}
+function openReset(id){resetId=id;const u=users.find(x=>x.id===id);$('resetName').textContent=u?.display_name||'';$('resetPassword').value='';$('resetMsg').textContent='';$('resetModal').classList.add('open')}function closeReset(){$('resetModal').classList.remove('open');resetId=null}
+async function doReset(){const password=$('resetPassword').value,msg=$('resetMsg');if(password.length<10){msg.className='error';msg.textContent='צריך לפחות 10 תווים';return}try{await call({action:'user_reset_password',id:resetId,password});msg.className='ok';msg.textContent='הסיסמה הוחלפה וכל החיבורים הישנים של המשתמש נותקו';setTimeout(closeReset,900)}catch(e){msg.className='error';msg.textContent=e.message}}
+boot();
+</script>
+</body>
+</html>
