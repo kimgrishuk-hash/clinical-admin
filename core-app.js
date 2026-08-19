@@ -26,7 +26,7 @@
   const SAFE_EXACT=new Set([
     'login','logout','toggleSettings','renderGlobal','showTab','readProductImage','saveProduct','closeProduct','deleteProduct','openProduct','renderInventory','renderFoodBags','openFoodProduct','showPriceMode','renderPrices','openPrice','savePrice','closePrice','deletePrice','adjustQty','jumpProduct','jumpPrice','showInventoryMode',
     'openDailyBoard','closeDailyBoard','setDailyMode','saveDailyTask','clearDailyForm','toggleDaily','editDaily','deleteDaily','reopenOnce','completeOnce',
-    'openStaffTasks','closeStaffTasks','createStaffTask','setTaskView','deleteStaffTask','reopenStaffTask','addTaskComment','closeStaffTask',
+    'openStaffTasks','closeStaffTasks','createStaffTask','setTaskView','deleteStaffTask','reopenStaffTask','addTaskComment','closeStaffTask','openClinicMessages','closeClinicMessagePicker',
     'renderSubscriptions','jumpSubscription','openProtocolEditor','addProtocolField','removeProtocolField','addTemplateCharge','removeTemplateCharge','showTemplateCatalog','pickTemplateCatalog','addTemplateClaim','removeTemplateClaim','closeProtocolEditor','saveProtocol','deleteProtocol','editProtocol','startProtocolRun','closeProtocolRun','addRunLine','removeRunLine','updateRunLine','showRunCatalog','pickRunCatalog','setRunPlan','setRunOverride','addInjectionQuick'
   ]);
   const SAFE_PREFIX=/^(clinic|ops|assistant|supplier|foodBag|simulation)/;
