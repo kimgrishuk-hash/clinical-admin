@@ -5,6 +5,12 @@
     s.dataset.assistantCenter='1';
     document.body.appendChild(s);
   }
+  if(!document.querySelector('script[data-foodbags-list]')){
+    const s=document.createElement('script');
+    s.src='foodbags-list.js?v=1';
+    s.dataset.foodbagsList='1';
+    document.body.appendChild(s);
+  }
 
   const backgrounds=[
     'linear-gradient(145deg,#e9f5ff,#dff0ff)',
