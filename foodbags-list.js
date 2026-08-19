@@ -1,13 +1,11 @@
 (()=>{
 const SECTIONS=[
-  {title:'פרמינה – Team Breeder',note:'לפי דף ההזמנה – משלימים לכמות הרשומה',rows:[
+  {title:'פרמינה – רשימת השלמה',note:'לפי דף ההזמנה – משלימים לכמות הרשומה',rows:[
     {id:190,expected:'8',min:8},
     {id:185,expected:'5–6',min:5},
     {id:175,expected:'1',min:1},
     {id:182,expected:'1',min:1},
-    {id:166,expected:'1',min:1}
-  ]},
-  {title:'פרמינה – Vet Life',rows:[
+    {id:166,expected:'1',min:1},
     {id:168,expected:'5',min:5},
     {id:186,expected:'1',min:1},
     {id:138,expected:'4',min:4},
@@ -50,7 +48,6 @@ const SECTIONS=[
   ]}
 ];
 const escFood=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-const allRows=()=>SECTIONS.flatMap(s=>s.rows||s.subsections?.flatMap(x=>x.rows)||[]);
 const productList=()=>{try{return typeof products!=='undefined'&&Array.isArray(products)?products:[]}catch{return[]}};
 const productById=id=>productList().find(x=>Number(x.id)===Number(id));
 function addAssets(){if(!document.querySelector('link[data-foodbags-list]')){const l=document.createElement('link');l.rel='stylesheet';l.href='foodbags-list.css?v=1';l.dataset.foodbagsList='1';document.head.appendChild(l)}}
