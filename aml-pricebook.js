@@ -4,7 +4,6 @@ if(window.__clinicAmlPricebookPatch)return;
 window.__clinicAmlPricebookPatch=true;
 
 const AML_PREFIX='10. AML — מחירון 2026 /';
-const AML_ROOT='10. AML — מחירון 2026';
 const AML_LABEL='AML מעבדה חיצונית';
 const collator=new Intl.Collator('he-IL',{numeric:true,sensitivity:'base'});
 let amlMode=false,installed=false;
@@ -22,10 +21,7 @@ function editing(){try{return !!settingsMode}catch{return false}}
 
 function filterOptions(amlOnly){
  const raw=[...new Set((amlOnly?allPrices().filter(isAml):allPrices()).map(x=>x.category).filter(Boolean))].sort(sortNatural);
- if(amlOnly)return raw.map(c=>({value:c,label:c.replace(AML_PREFIX,'')}));
- const non=raw.filter(c=>!c.startsWith(AML_PREFIX)).map(c=>({value:c,label:c}));
- if(raw.some(c=>c.startsWith(AML_PREFIX)))non.push({value:AML_ROOT,label:AML_ROOT});
- return non.sort((a,b)=>sortNatural(a.label,b.label));
+ return raw.map(c=>({value:c,label:amlOnly?c.replace(AML_PREFIX,''):c}));
 }
 function syncCategoryFilter(amlOnly,reset=false){
  const select=document.getElementById('priceCategory');if(!select)return;
@@ -36,12 +32,11 @@ function syncCategoryFilter(amlOnly,reset=false){
  if(prev&&opts.some(o=>o.value===prev))select.value=prev;
  select.dataset.amlCategorySig=sig;
 }
-function categoryMatches(x,cat){if(!cat)return true;if(cat===AML_ROOT)return isAml(x);return x.category===cat}
 function renderPriceRows(){
  const search=document.getElementById('priceSearch'),select=document.getElementById('priceCategory'),list=document.getElementById('procedurePriceList');if(!search||!select||!list)return;
  syncCategoryFilter(amlMode,false);
  const q=String(search.value||'').trim().toLowerCase(),cat=select.value||'';let arr=allPrices();if(amlMode)arr=arr.filter(isAml);
- arr=arr.filter(x=>categoryMatches(x,cat)&&(!q||(String(x.name||'')+' '+String(x.category||'')+' '+String(x.note||'')).toLowerCase().includes(q)));
+ arr=arr.filter(x=>(!cat||x.category===cat)&&(!q||(String(x.name||'')+' '+String(x.category||'')+' '+String(x.note||'')).toLowerCase().includes(q)));
  const groups={};arr.forEach(x=>(groups[x.category]??=[]).push(x));const canEdit=editing();
  list.innerHTML=Object.keys(groups).sort(sortNatural).map(c=>{const heading=amlMode?c.replace(AML_PREFIX,''):c;return `<div class="card pricegroup"><h3>${e(heading)}</h3>${groups[c].map(x=>`<div class="price-row"><div class="name"><b>${e(x.name)}</b>${x.note?`<div class="muted">${e(x.note)}</div>`:''}</div><div><span class="muted">רגיל:</span> <b>${regularRange(x)}</b></div><div class="member">מנוי זהב: ${memberRange(x)}</div>${canEdit?`<button class="btn" onclick="openPrice(${x.id})">עריכה</button>`:''}</div>`).join('')}</div>`}).join('')||'<p class="muted">אין תוצאות</p>';
 }
