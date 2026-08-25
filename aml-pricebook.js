@@ -5,6 +5,7 @@ window.__clinicAmlPricebookPatch=true;
 
 const AML_PREFIX='10. AML — מחירון 2026 /';
 const AML_LABEL='AML מעבדה חיצונית';
+const AML_SAMPLE_FEE=100;
 const collator=new Intl.Collator('he-IL',{numeric:true,sensitivity:'base'});
 let amlMode=false,installed=false;
 
@@ -38,7 +39,7 @@ function renderPriceRows(){
  const q=String(search.value||'').trim().toLowerCase(),cat=select.value||'';let arr=allPrices();if(amlMode)arr=arr.filter(isAml);
  arr=arr.filter(x=>(!cat||x.category===cat)&&(!q||(String(x.name||'')+' '+String(x.category||'')+' '+String(x.note||'')).toLowerCase().includes(q)));
  const groups={};arr.forEach(x=>(groups[x.category]??=[]).push(x));const canEdit=editing();
- list.innerHTML=Object.keys(groups).sort(sortNatural).map(c=>{const heading=amlMode?c.replace(AML_PREFIX,''):c;return `<div class="card pricegroup"><h3>${e(heading)}</h3>${groups[c].map(x=>`<div class="price-row"><div class="name"><b>${e(x.name)}</b>${x.note?`<div class="muted">${e(x.note)}</div>`:''}</div><div><span class="muted">רגיל:</span> <b>${regularRange(x)}</b></div><div class="member">מנוי זהב: ${memberRange(x)}</div>${canEdit?`<button class="btn" onclick="openPrice(${x.id})">עריכה</button>`:''}</div>`).join('')}</div>`}).join('')||'<p class="muted">אין תוצאות</p>';
+ list.innerHTML=Object.keys(groups).sort(sortNatural).map(c=>{const heading=amlMode?c.replace(AML_PREFIX,''):c;return `<div class="card pricegroup"><h3>${e(heading)}</h3>${groups[c].map(x=>`<div class="price-row"><div class="name"><b>${e(x.name)}</b>${x.note?`<div class="muted">${e(x.note)}</div>`:''}</div><div><span class="muted">רגיל:</span> <b>${regularRange(x)}</b></div>${isAml(x)?`<div class="aml-sample-fee"><span class="muted">הכנת דגימה במרפאה:</span> <b>${money(AML_SAMPLE_FEE)}</b></div>`:`<div class="member">מנוי זהב: ${memberRange(x)}</div>`}${canEdit?`<button class="btn" onclick="openPrice(${x.id})">עריכה</button>`:''}</div>`).join('')}</div>`}).join('')||'<p class="muted">אין תוצאות</p>';
 }
 function install(){
  if(installed)return true;if(typeof window.showInventoryMode!=='function'||typeof window.showPriceMode!=='function'||typeof window.renderPrices!=='function')return false;
