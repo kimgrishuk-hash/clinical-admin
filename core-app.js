@@ -43,3 +43,4 @@
 document.write('<script src="core-app-legacy.js?v=2"><'+'/script>');
 document.write('<script src="universal-edit.js?v=1"><'+'/script>');
 document.write('<script src="aml-pricebook.js?v=1"><'+'/script>');
+document.write('<script src="image-storage.js?v=1"><'+'/script>');
