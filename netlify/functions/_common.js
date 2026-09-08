@@ -4,7 +4,15 @@ const COOKIE='__Host-clinic_session';
 function headers(extra={}){return {'content-type':'application/json; charset=utf-8','cache-control':'no-store, max-age=0','x-content-type-options':'nosniff',...extra}}
 function response(statusCode,payload,extra={}){return {statusCode,headers:headers(extra),body:JSON.stringify(payload??{})}}
 function cookies(event){const raw=String(event.headers?.cookie||'');const out={};for(const part of raw.split(';')){const i=part.indexOf('=');if(i<0)continue;out[part.slice(0,i).trim()]=decodeURIComponent(part.slice(i+1).trim())}return out}
-function sameOrigin(event){const origin=String(event.headers?.origin||'');if(!origin)return true;const host=String(event.headers?.['x-forwarded-host']||event.headers?.host||'');const proto=String(event.headers?.['x-forwarded-proto']||'https').split(',')[0].trim();return origin===`${proto}://${host}`}
+function sameOrigin(event){
+  const origin=String(event.headers?.origin||'').trim();
+  if(!origin)return true;
+  let originHost='';
+  try{originHost=new URL(origin).host.toLowerCase()}catch{return false}
+  const forwarded=String(event.headers?.['x-forwarded-host']||'').split(',')[0].trim().toLowerCase();
+  const host=String(event.headers?.host||'').split(',')[0].trim().toLowerCase();
+  return !!originHost&&(originHost===forwarded||originHost===host);
+}
 function bodyOf(event){if(!event.body)return {};return JSON.parse(event.body)}
 function sessionCookie(token,expiresAt){const exp=Math.max(60,Math.min(43200,Math.floor((new Date(expiresAt).getTime()-Date.now())/1000)||43200));return `${COOKIE}=${encodeURIComponent(token)}; Path=/; Max-Age=${exp}; HttpOnly; Secure; SameSite=Strict; Priority=High`}
 function clearCookie(){return `${COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Strict; Priority=High`}
