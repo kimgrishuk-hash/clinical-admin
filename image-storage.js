@@ -3,7 +3,7 @@
   const FILES='https://bhvkhxmexyhsjhwjsytp.supabase.co/functions/v1/clinic-files';
   let pendingFile=null;
   const imageCache=new Map();
-  async function callFiles(body){const r=await fetch(FILES,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body),cache:'no-store'});let j={};try{j=await r.json()}catch{}if(!r.ok)throw new Error(j.error||'שגיאה');return j}
+  async function callFiles(body){if(window.ClinicData)return ClinicData.request('files',body);const r=await fetch(FILES,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body),cache:'no-store'});let j={};try{j=await r.json()}catch{}if(!r.ok)throw new Error(j.error||'שגיאה');return j}
   async function resolveImage(img){if(!img||img.dataset.loading==='1')return;const id=Number(img.dataset.clinicProductImage||0);if(!id)return;img.dataset.loading='1';try{let url=imageCache.get(id);if(!url){const j=await callFiles({action:'product_image',id});url=j.url||'';if(url)imageCache.set(id,url)}if(url){img.src=url;img.removeAttribute('data-clinic-product-image');img.style.display='block'}}catch(e){console.warn('product image',id,e)}finally{delete img.dataset.loading}}
   const observer='IntersectionObserver'in window?new IntersectionObserver(entries=>{for(const e of entries)if(e.isIntersecting){observer.unobserve(e.target);resolveImage(e.target)}},{rootMargin:'250px'}):null;
   function scan(root=document){root.querySelectorAll?.('img[data-clinic-product-image]').forEach(img=>observer?observer.observe(img):resolveImage(img))}
@@ -38,14 +38,14 @@
     try{if(pendingFile)imageRef=await uploadImage(pendingFile)}catch(e){alert(e.message||'לא הצלחתי להעלות תמונה');return}
     const item={name:document.getElementById('prodName')?.value.trim()||'',category:document.getElementById('prodCat')?.value.trim()||'אחר',price_ils:document.getElementById('prodPrice')?.value??'',details:document.getElementById('prodDetails')?.value||'',image_url:imageRef||null,target_qty:document.getElementById('prodTarget')?.value??0,current_qty:document.getElementById('prodCurrent')?.value??0};
     if(!item.name)return alert('צריך שם מוצר');
-    try{await api({action:id?'update':'create',id,item});pendingFile=null;closeProduct();await loadAll()}catch(e){alert('לא הצלחתי לשמור: '+e.message)}
+    try{
+      const j=await api({action:id?'update':'create',id,item});const saved=j.item;
+      const i=products.findIndex(x=>String(x.id)===String(saved.id));if(i>=0)products[i]=saved;else products.push(saved);
+      productImageData=saved.image_url||'';pendingFile=null;ClinicData?.localInventory?.(saved);closeProduct();fillFilters();renderInventory();
+    }catch(e){alert('לא הצלחתי לשמור: '+e.message)}
   };
 })();
 
-// Netlify production routing hotfix: install after all page scripts have loaded so
-// later modules cannot replace it. This bypasses both cross-origin Supabase calls
-// and the /api redirect layer, and sends requests straight to the deployed
-// same-origin Netlify Functions while preserving the HttpOnly session cookie.
 window.addEventListener('load',()=>{
   if(window.__clinicDirectNetlifyFetch)return;window.__clinicDirectNetlifyFetch=true;
   const EDGE='https://bhvkhxmexyhsjhwjsytp.supabase.co/functions/v1/';
@@ -57,6 +57,7 @@ window.addEventListener('load',()=>{
     [EDGE+'clinic-assistant','/.netlify/functions/assistant'],
     [EDGE+'clinic-files','/.netlify/functions/files'],
     ['/api/session','/.netlify/functions/session'],
+    ['/api/sync','/.netlify/functions/sync'],
     ['/api/clinic','/.netlify/functions/clinic'],
     ['/api/tasks','/.netlify/functions/tasks'],
     ['/api/ops','/.netlify/functions/ops'],
