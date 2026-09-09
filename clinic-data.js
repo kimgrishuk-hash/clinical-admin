@@ -104,12 +104,10 @@
     state.loadedTopics.add(DATA_TOPIC.reminders);state.loadedTopics.add(DATA_TOPIC.inbox);
     const rc=validCache('reminders',DATA_TOPIC.reminders),ic=validCache('inbox',DATA_TOPIC.inbox);
     if(rc&&ic)return {reminders:rc,inbox:ic};
-    const [r,i]=await Promise.all([
-      rc?Promise.resolve({items:rc}):request('assistant',{action:'reminders_list'},{read:true}),
-      ic?Promise.resolve({items:ic}):request('assistant',{action:'inbox_list'},{read:true})
-    ]);
-    if(!rc)writeCache('reminders',r.items||[],DATA_TOPIC.reminders);if(!ic)writeCache('inbox',i.items||[],DATA_TOPIC.inbox);
-    return {reminders:r.items||rc||[],inbox:i.items||ic||[]};
+    const j=await request('assistant',{action:'bootstrap'},{read:true});
+    const r=Array.isArray(j.reminders)?j.reminders:[],i=Array.isArray(j.inbox)?j.inbox:[];
+    writeCache('reminders',r,DATA_TOPIC.reminders);writeCache('inbox',i,DATA_TOPIC.inbox);
+    return {reminders:r,inbox:i};
   }
 
   function upsertArray(name,topic,item){if(!item)return;const arr=[...(readCache(name)?.data||[])];const id=String(item.id);const i=arr.findIndex(x=>String(x.id)===id);if(i>=0)arr[i]=item;else arr.unshift(item);writeCache(name,arr,topic)}
@@ -121,12 +119,15 @@
   function localTask(item){
     if(!item)return;state.loadedTopics.add(DATA_TOPIC.tasks);
     const openName='tasks:open',closedName='tasks:closed';
-    if(item.status==='closed'){deleteFromArray(openName,DATA_TOPIC.tasks,item.id);if(readCache(closedName))upsertArray(closedName,DATA_TOPIC.tasks,item)}
-    else{deleteFromArray(closedName,DATA_TOPIC.tasks,item.id);if(readCache(openName))upsertArray(openName,DATA_TOPIC.tasks,item)}
+    if(item.status==='closed'){if(readCache(openName))deleteFromArray(openName,DATA_TOPIC.tasks,item.id);if(readCache(closedName))upsertArray(closedName,DATA_TOPIC.tasks,item)}
+    else{if(readCache(closedName))deleteFromArray(closedName,DATA_TOPIC.tasks,item.id);if(readCache(openName))upsertArray(openName,DATA_TOPIC.tasks,item)}
     broadcast(['clinic_tasks']);
   }
   function removeTask(id){if(readCache('tasks:open'))deleteFromArray('tasks:open',DATA_TOPIC.tasks,id);if(readCache('tasks:closed'))deleteFromArray('tasks:closed',DATA_TOPIC.tasks,id);broadcast(['clinic_tasks'])}
   function localOps(key,data){const cur={...(readCache('ops')?.data||{})};cur[key]=data;writeCache('ops',cur,DATA_TOPIC.ops);broadcast(['clinic_ops'])}
+  function localReminder(item){state.loadedTopics.add(DATA_TOPIC.reminders);if(readCache('reminders'))upsertArray('reminders',DATA_TOPIC.reminders,item);broadcast(['clinic_reminders'])}
+  function removeReminder(id){if(readCache('reminders'))deleteFromArray('reminders',DATA_TOPIC.reminders,id);broadcast(['clinic_reminders'])}
+  function localInbox(item){state.loadedTopics.add(DATA_TOPIC.inbox);if(readCache('inbox'))upsertArray('inbox',DATA_TOPIC.inbox,item);broadcast(['clinic_inbox_events'])}
 
   function applyEntityEvents(topic,cacheName,records,events){
     const box=readCache(cacheName);if(!box)return;
@@ -137,7 +138,7 @@
   }
   function applyTaskEvents(j){
     const events=j.events||[],records=j.records?.clinic_tasks||[];
-    const open=readCache('tasks:open'),closed=readCache('tasks:closed');if(!open&&!closed)return;
+    const open=readCache('tasks:open'),closed=readCache('tasks:closed');if(!open&&!closed){if(events.some(x=>x.topic==='clinic_task_comments'))emit('task-comments-stale',true);return}
     let a=open?[...open.data]:null,b=closed?[...closed.data]:null;
     for(const e of events.filter(x=>x.topic==='clinic_tasks'&&x.operation==='delete')){if(a)a=a.filter(x=>String(x.id)!==String(e.record_key));if(b)b=b.filter(x=>String(x.id)!==String(e.record_key))}
     for(const item of records){if(a)a=a.filter(x=>String(x.id)!==String(item.id));if(b)b=b.filter(x=>String(x.id)!==String(item.id));if(item.status==='closed'){if(b)b.unshift(item)}else if(a)a.unshift(item)}
@@ -163,9 +164,10 @@
       setCursor(j.cursor);
       const ev=j.events||[];
       if(ev.length){
+        const vv={};for(const e of ev)vv[e.topic]=Math.max(Number(vv[e.topic]||0),Number(e.id||0));rememberVersions(vv);
         applyEntityEvents('clinic_inventory','inventory',j.records?.clinic_inventory,ev);
         applyEntityEvents('clinic_pricebook','prices',j.records?.clinic_pricebook,ev);
-        applyTaskEvents(j);applyOpsEvents(j);applyAssistantEvents(j);
+        applyTaskEvents(j);applyOpsEvents(j);applyAssistantEvents(j);emit('changes',j);
       }
       if(j.task_counts){state.taskCounts=j.task_counts;emit('task-counts',j.task_counts)}
       return j;
@@ -199,7 +201,7 @@
   window.ClinicData={
     request,bootstrap,inventory,prices,tasks,task,ops,assistant,syncChanges,on,
     getTaskCounts:()=>state.taskCounts,getVersions:()=>({...state.versions}),getCursor:()=>state.cursor,
-    localInventory,removeInventory,localPrice,removePrice,localTask,removeTask,localOps,
+    localInventory,removeInventory,localPrice,removePrice,localTask,removeTask,localOps,localReminder,removeReminder,localInbox,
     cache:(name)=>readCache(name)?.data||null,clearCache,connectRealtime,closeRealtime,
     topics:DATA_TOPIC
   };
