@@ -6,31 +6,37 @@
   from = "/api/session"
   to = "/.netlify/functions/session"
   status = 200
+  force = true
 
 [[redirects]]
   from = "/api/clinic"
   to = "/.netlify/functions/clinic"
   status = 200
+  force = true
 
 [[redirects]]
   from = "/api/tasks"
   to = "/.netlify/functions/tasks"
   status = 200
+  force = true
 
 [[redirects]]
   from = "/api/ops"
   to = "/.netlify/functions/ops"
   status = 200
+  force = true
 
 [[redirects]]
   from = "/api/assistant"
   to = "/.netlify/functions/assistant"
   status = 200
+  force = true
 
 [[redirects]]
   from = "/api/files"
   to = "/.netlify/functions/files"
   status = 200
+  force = true
 
 [[headers]]
   for = "/*.js"
