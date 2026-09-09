@@ -9,68 +9,11 @@
   function scan(root=document){root.querySelectorAll?.('img[data-clinic-product-image]').forEach(img=>observer?observer.observe(img):resolveImage(img))}
   new MutationObserver(ms=>{for(const m of ms)for(const n of m.addedNodes)if(n.nodeType===1)scan(n)}).observe(document.documentElement,{childList:true,subtree:true});
   document.addEventListener('DOMContentLoaded',()=>scan());
-
   const oldCard=window.productCard;
-  if(typeof oldCard==='function')window.productCard=function(x,editable){
-    let html=oldCard(x,editable);
-    const ref=String(x?.image_url||'');
-    if(ref&&(ref.startsWith('dbimg:')||ref.startsWith('storage:'))){
-      const safe=ref.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-      html=html.replace(new RegExp(`src="${safe}"`),`src="" data-clinic-product-image="${Number(x.id)||0}"`);
-    }
-    return html;
-  };
-
+  if(typeof oldCard==='function')window.productCard=function(x,editable){let html=oldCard(x,editable);const ref=String(x?.image_url||'');if(ref&&(ref.startsWith('dbimg:')||ref.startsWith('storage:'))){const safe=ref.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');html=html.replace(new RegExp(`src="${safe}"`),`src="" data-clinic-product-image="${Number(x.id)||0}"`)}return html};
   const oldOpen=window.openProduct;
   if(typeof oldOpen==='function')window.openProduct=function(id){pendingFile=null;const input=document.getElementById('prodImage');if(input)input.value='';return oldOpen(id)};
   window.readProductImage=function(e){pendingFile=e?.target?.files?.[0]||null;if(pendingFile&&!/^image\/(jpeg|png|webp)$/i.test(pendingFile.type)){alert('אפשר להעלות JPG, PNG או WEBP');pendingFile=null;if(e?.target)e.target.value=''}};
-
-  async function uploadImage(file){
-    const prep=await callFiles({action:'prepare_upload',mime_type:file.type,size_bytes:file.size,category:'other'});
-    const up=await fetch(prep.signed_url,{method:'PUT',headers:{'content-type':file.type},body:file});
-    if(!up.ok)throw new Error('העלאת התמונה נכשלה');
-    return 'storage:'+prep.path;
-  }
-
-  window.saveProduct=async function(){
-    const id=document.getElementById('prodId')?.value||'';
-    let imageRef=typeof productImageData==='string'?productImageData:null;
-    try{if(pendingFile)imageRef=await uploadImage(pendingFile)}catch(e){alert(e.message||'לא הצלחתי להעלות תמונה');return}
-    const item={name:document.getElementById('prodName')?.value.trim()||'',category:document.getElementById('prodCat')?.value.trim()||'אחר',price_ils:document.getElementById('prodPrice')?.value??'',details:document.getElementById('prodDetails')?.value||'',image_url:imageRef||null,target_qty:document.getElementById('prodTarget')?.value??0,current_qty:document.getElementById('prodCurrent')?.value??0};
-    if(!item.name)return alert('צריך שם מוצר');
-    try{
-      const j=await api({action:id?'update':'create',id,item});const saved=j.item;
-      const i=products.findIndex(x=>String(x.id)===String(saved.id));if(i>=0)products[i]=saved;else products.push(saved);
-      productImageData=saved.image_url||'';pendingFile=null;ClinicData?.localInventory?.(saved);closeProduct();fillFilters();renderInventory();
-    }catch(e){alert('לא הצלחתי לשמור: '+e.message)}
-  };
+  async function uploadImage(file){const prep=await callFiles({action:'prepare_upload',mime_type:file.type,size_bytes:file.size,category:'other'});const up=await fetch(prep.signed_url,{method:'PUT',headers:{'content-type':file.type},body:file});if(!up.ok)throw new Error('העלאת התמונה נכשלה');return 'storage:'+prep.path}
+  window.saveProduct=async function(){const id=document.getElementById('prodId')?.value||'';let imageRef=typeof productImageData==='string'?productImageData:null;try{if(pendingFile)imageRef=await uploadImage(pendingFile)}catch(e){alert(e.message||'לא הצלחתי להעלות תמונה');return}const item={name:document.getElementById('prodName')?.value.trim()||'',category:document.getElementById('prodCat')?.value.trim()||'אחר',price_ils:document.getElementById('prodPrice')?.value??'',details:document.getElementById('prodDetails')?.value||'',image_url:imageRef||null,target_qty:document.getElementById('prodTarget')?.value??0,current_qty:document.getElementById('prodCurrent')?.value??0};if(!item.name)return alert('צריך שם מוצר');try{const j=await api({action:id?'update':'create',id,item});productImageData=j.item?.image_url||'';pendingFile=null;closeProduct();fillFilters();renderInventory()}catch(e){alert('לא הצלחתי לשמור: '+e.message)}};
 })();
-
-window.addEventListener('load',()=>{
-  if(window.__clinicDirectNetlifyFetch)return;window.__clinicDirectNetlifyFetch=true;
-  const EDGE='https://bhvkhxmexyhsjhwjsytp.supabase.co/functions/v1/';
-  const direct=new Map([
-    [EDGE+'clinic-auth','/.netlify/functions/session'],
-    [EDGE+'clinic-api','/.netlify/functions/clinic'],
-    [EDGE+'clinic-tasks','/.netlify/functions/tasks'],
-    [EDGE+'clinic-ops','/.netlify/functions/ops'],
-    [EDGE+'clinic-assistant','/.netlify/functions/assistant'],
-    [EDGE+'clinic-files','/.netlify/functions/files'],
-    ['/api/session','/.netlify/functions/session'],
-    ['/api/sync','/.netlify/functions/sync'],
-    ['/api/clinic','/.netlify/functions/clinic'],
-    ['/api/tasks','/.netlify/functions/tasks'],
-    ['/api/ops','/.netlify/functions/ops'],
-    ['/api/assistant','/.netlify/functions/assistant'],
-    ['/api/files','/.netlify/functions/files']
-  ]);
-  const previousFetch=window.fetch.bind(window);
-  window.fetch=function(input,init={}){
-    const url=typeof input==='string'?input:String(input?.url||'');
-    const mapped=direct.get(url);
-    if(!mapped)return previousFetch(input,init);
-    const h=new Headers(init.headers||(typeof input!=='string'?input.headers:undefined)||{});
-    h.delete('authorization');h.delete('apikey');h.delete('x-clinic-pin');
-    return previousFetch(mapped,{...init,headers:h,credentials:'same-origin',cache:'no-store'});
-  };
-});
