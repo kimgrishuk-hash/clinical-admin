@@ -1,9 +1,10 @@
 (()=>{
   if(window.ClinicData)return;
 
+  const transportFetch=window.fetch.bind(window);
   const ROUTES={session:'/api/session',sync:'/api/sync',clinic:'/api/clinic',tasks:'/api/tasks',ops:'/api/ops',assistant:'/api/assistant',files:'/api/files'};
   const CACHE_PREFIX='clinic_cache_v4:',CURSOR_KEY='clinic_sync_cursor_v4',VERSIONS_KEY='clinic_sync_versions_v4';
-  const PROJECT='bhvkhxmexyhsjhwjsytp';
+  const PROJECT='bhvkhxmexyhsjhwjsytp',EDGE=`https://${PROJECT}.supabase.co/functions/v1/`;
   const REALTIME_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJodmtoeG1leHloc2pod2pzeXRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYyNjM1NDMsImV4cCI6MjEwMTgzOTU0M30.4v63vH6m8-hlskVkMI0VcTTLrWBszfEk_uKUVw-Rpe8';
   const DATA_TOPIC={inventory:'clinic_inventory',prices:'clinic_pricebook',tasks:'clinic_tasks',ops:'clinic_ops',reminders:'clinic_reminders',inbox:'clinic_inbox_events',protocols:'clinic_protocols',quotes:'clinic_quote_simulations'};
   function safeJson(raw,fallback){try{return JSON.parse(raw||'')}catch{return fallback}}
@@ -20,10 +21,10 @@
   function emit(name,data){const set=state.listeners.get(name);if(set)for(const fn of [...set]){try{fn(data)}catch(e){console.warn('clinic-data listener',name,e)}}window.dispatchEvent(new CustomEvent('clinic:data',{detail:{name,data}}))}
   function on(name,fn){if(!state.listeners.has(name))state.listeners.set(name,new Set());state.listeners.get(name).add(fn);return()=>state.listeners.get(name)?.delete(fn)}
 
-  async function request(route,body={},options={}){const url=ROUTES[route]||route,action=String(body?.action||'');const isRead=options.read??['list','price_list','bootstrap','changes_since','get','reminders_list','inbox_list','connection_status','quote_list'].includes(action);const key=isRead?url+'|'+JSON.stringify(body):'';if(key&&state.inflight.has(key))return state.inflight.get(key);const run=(async()=>{const r=await fetch(url,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body),credentials:'same-origin',cache:'no-store'});let j={};try{j=await r.json()}catch{}if(r.status===401){emit('session-expired',true);throw new Error('unauthorized')}if(!r.ok)throw new Error(j.error||`HTTP ${r.status}`);return j})();if(key)state.inflight.set(key,run);try{return await run}finally{if(key)state.inflight.delete(key)}}
-  const cacheVersion=(name)=>Number(readCache(name)?.version||0);
+  async function request(route,body={},options={}){const url=ROUTES[route]||route,action=String(body?.action||'');const isRead=options.read??['list','price_list','bootstrap','changes_since','get','reminders_list','inbox_list','connection_status','quote_list'].includes(action);const key=isRead?url+'|'+JSON.stringify(body):'';if(key&&state.inflight.has(key))return state.inflight.get(key);const run=(async()=>{const r=await transportFetch(url,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body),credentials:'same-origin',cache:'no-store'});let j={};try{j=await r.json()}catch{}if(r.status===401){emit('session-expired',true);throw new Error('unauthorized')}if(!r.ok)throw new Error(j.error||`HTTP ${r.status}`);return j})();if(key)state.inflight.set(key,run);try{return await run}finally{if(key)state.inflight.delete(key)}}
+  const cacheVersion=name=>Number(readCache(name)?.version||0);
 
-  async function bootstrap(){if(state.boot)return state.boot;state.boot=(async()=>{const cached=readCache('inventory');if(cached?.data){state.loadedTopics.add(DATA_TOPIC.inventory);emit('inventory',cached.data)}const known={clinic_inventory:cacheVersion('inventory')};const j=await request('sync',{action:'bootstrap',modules:['inventory','task_counts'],known_versions:known},{read:true});rememberVersions(j.versions);setCursor(j.cursor);if(Array.isArray(j.inventory))writeCache('inventory',j.inventory,DATA_TOPIC.inventory);else if(cached?.data&&Number(cached.version||0)!==Number(state.versions[DATA_TOPIC.inventory]||0))clearCache('inventory');if(j.task_counts){state.taskCounts=j.task_counts;emit('task-counts',j.task_counts)}if(document.visibilityState!=='hidden')connectRealtime();return {inventory:validCache('inventory',DATA_TOPIC.inventory)||j.inventory||[],task_counts:j.task_counts||state.taskCounts,versions:state.versions,cursor:state.cursor}})();try{return await state.boot}catch(e){state.boot=null;throw e}}
+  async function bootstrap(){if(state.boot)return state.boot;state.boot=(async()=>{const cachedInv=readCache('inventory'),cachedOps=readCache('ops');if(cachedInv?.data){state.loadedTopics.add(DATA_TOPIC.inventory);emit('inventory',cachedInv.data)}if(cachedOps?.data){state.loadedTopics.add(DATA_TOPIC.ops);emit('ops',cachedOps.data)}const known={clinic_inventory:cacheVersion('inventory'),clinic_ops:cacheVersion('ops')};const j=await request('sync',{action:'bootstrap',modules:['inventory','task_counts','ops'],known_versions:known},{read:true});rememberVersions(j.versions);setCursor(j.cursor);if(Array.isArray(j.inventory))writeCache('inventory',j.inventory,DATA_TOPIC.inventory);else if(cachedInv?.data&&Number(cachedInv.version||0)!==Number(state.versions[DATA_TOPIC.inventory]||0))clearCache('inventory');if(j.ops&&typeof j.ops==='object'){state.loadedTopics.add(DATA_TOPIC.ops);writeCache('ops',j.ops,DATA_TOPIC.ops)}else if(cachedOps?.data&&Number(cachedOps.version||0)!==Number(state.versions[DATA_TOPIC.ops]||0))clearCache('ops');if(j.task_counts){state.taskCounts=j.task_counts;emit('task-counts',j.task_counts)}if(document.visibilityState!=='hidden')connectRealtime();return {inventory:validCache('inventory',DATA_TOPIC.inventory)||j.inventory||[],ops:validCache('ops',DATA_TOPIC.ops)||j.ops||{},task_counts:j.task_counts||state.taskCounts,versions:state.versions,cursor:state.cursor}})();try{return await state.boot}catch(e){state.boot=null;throw e}}
   async function inventory(){state.loadedTopics.add(DATA_TOPIC.inventory);const c=validCache('inventory',DATA_TOPIC.inventory);if(c)return c;const j=await request('clinic',{action:'list'},{read:true});return writeCache('inventory',j.items||[],DATA_TOPIC.inventory)}
   async function prices(){state.loadedTopics.add(DATA_TOPIC.prices);const c=validCache('prices',DATA_TOPIC.prices);if(c)return c;const j=await request('clinic',{action:'price_list'},{read:true});return writeCache('prices',j.items||[],DATA_TOPIC.prices)}
   async function tasks(status='open'){status=status==='closed'?'closed':'open';state.loadedTopics.add(DATA_TOPIC.tasks);const name='tasks:'+status,c=validCache(name,DATA_TOPIC.tasks);if(c)return c;const j=await request('tasks',{action:'list',status,include_comments:false,limit:500},{read:true});return writeCache(name,j.items||[],DATA_TOPIC.tasks)}
@@ -60,6 +61,22 @@
   if(bc)bc.onmessage=e=>{if(e.data?.type==='changed'&&document.visibilityState!=='hidden')syncChanges()};
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')closeRealtime();else{syncChanges();connectRealtime()}});
   window.addEventListener('online',()=>{syncChanges();connectRealtime()});window.addEventListener('beforeunload',closeRealtime);
+
+  function jsonResponse(data){return new Response(JSON.stringify(data),{status:200,headers:{'content-type':'application/json','cache-control':'no-store'}})}
+  window.fetch=async function(input,init={}){
+    const url=typeof input==='string'?input:String(input?.url||''),method=String(init.method||(typeof input!=='string'?input.method:'GET')||'GET').toUpperCase();
+    if(method==='POST'){
+      let body={};try{body=JSON.parse(String(init.body||'{}'))}catch{}
+      const action=String(body.action||'');
+      if((url==='/api/ops'||url===EDGE+'clinic-ops')&&action==='list'){await bootstrap();const data=validCache('ops',DATA_TOPIC.ops);if(data)return jsonResponse({items:data})}
+      if((url==='/api/clinic'||url===EDGE+'clinic-api')&&action==='list'){return jsonResponse({items:await inventory()})}
+      if((url==='/api/clinic'||url===EDGE+'clinic-api')&&action==='price_list'){return jsonResponse({items:await prices()})}
+      if((url==='/api/clinic'||url===EDGE+'clinic-api')&&action==='quote_list'){return jsonResponse({items:await quotes()})}
+      if((url==='/api/tasks'||url===EDGE+'clinic-tasks')&&action==='list'&&!body.kind&&body.include_comments!==true){return jsonResponse({items:await tasks(body.status)})}
+      if((url==='/api/assistant'||url===EDGE+'clinic-assistant')&&(action==='reminders_list'||action==='inbox_list')){const data=await assistant();return jsonResponse({items:action==='reminders_list'?data.reminders:data.inbox})}
+    }
+    return transportFetch(input,init)
+  };
 
   window.ClinicData={request,bootstrap,inventory,prices,tasks,task,ops,assistant,quotes,syncChanges,on,getTaskCounts:()=>state.taskCounts,getVersions:()=>({...state.versions}),getCursor:()=>state.cursor,localInventory,removeInventory,localPrice,removePrice,localTask,removeTask,localOps,localReminder,removeReminder,localInbox,localQuote,removeQuote,cache:name=>readCache(name)?.data||null,clearCache,connectRealtime,closeRealtime,topics:DATA_TOPIC};
 })();
