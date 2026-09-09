@@ -41,3 +41,35 @@
     try{await api({action:id?'update':'create',id,item});pendingFile=null;closeProduct();await loadAll()}catch(e){alert('לא הצלחתי לשמור: '+e.message)}
   };
 })();
+
+// Netlify production routing hotfix: install after all page scripts have loaded so
+// later modules cannot replace it. This bypasses both cross-origin Supabase calls
+// and the /api redirect layer, and sends requests straight to the deployed
+// same-origin Netlify Functions while preserving the HttpOnly session cookie.
+window.addEventListener('load',()=>{
+  if(window.__clinicDirectNetlifyFetch)return;window.__clinicDirectNetlifyFetch=true;
+  const EDGE='https://bhvkhxmexyhsjhwjsytp.supabase.co/functions/v1/';
+  const direct=new Map([
+    [EDGE+'clinic-auth','/.netlify/functions/session'],
+    [EDGE+'clinic-api','/.netlify/functions/clinic'],
+    [EDGE+'clinic-tasks','/.netlify/functions/tasks'],
+    [EDGE+'clinic-ops','/.netlify/functions/ops'],
+    [EDGE+'clinic-assistant','/.netlify/functions/assistant'],
+    [EDGE+'clinic-files','/.netlify/functions/files'],
+    ['/api/session','/.netlify/functions/session'],
+    ['/api/clinic','/.netlify/functions/clinic'],
+    ['/api/tasks','/.netlify/functions/tasks'],
+    ['/api/ops','/.netlify/functions/ops'],
+    ['/api/assistant','/.netlify/functions/assistant'],
+    ['/api/files','/.netlify/functions/files']
+  ]);
+  const previousFetch=window.fetch.bind(window);
+  window.fetch=function(input,init={}){
+    const url=typeof input==='string'?input:String(input?.url||'');
+    const mapped=direct.get(url);
+    if(!mapped)return previousFetch(input,init);
+    const h=new Headers(init.headers||(typeof input!=='string'?input.headers:undefined)||{});
+    h.delete('authorization');h.delete('apikey');h.delete('x-clinic-pin');
+    return previousFetch(mapped,{...init,headers:h,credentials:'same-origin',cache:'no-store'});
+  };
+});
