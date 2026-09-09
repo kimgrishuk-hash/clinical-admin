@@ -1,7 +1,7 @@
 (()=>{
   const EDGE='https://bhvkhxmexyhsjhwjsytp.supabase.co/functions/v1/';
+  const AUTH=EDGE+'clinic-auth';
   const MAP=new Map([
-    [EDGE+'clinic-auth','/api/session'],
     [EDGE+'clinic-api','/api/clinic'],
     [EDGE+'clinic-tasks','/api/tasks'],
     [EDGE+'clinic-ops','/api/ops'],
@@ -9,19 +9,34 @@
     [EDGE+'clinic-files','/api/files']
   ]);
   const nativeFetch=window.fetch.bind(window);
-  window.fetch=function(input,init={}){
+  window.fetch=async function(input,init={}){
     const url=typeof input==='string'?input:String(input?.url||'');
+    if(url===AUTH){
+      let action='';
+      try{action=JSON.parse(String(init.body||'{}')).action||''}catch{}
+      if(action==='login'){
+        const r=await nativeFetch(input,init);
+        if(r.ok){
+          try{
+            const j=await r.clone().json();
+            if(j?.token){
+              const exp=Math.max(60,Math.min(43200,Math.floor((new Date(j.expires_at).getTime()-Date.now())/1000)||43200));
+              document.cookie=`__Host-clinic_session=${encodeURIComponent(j.token)}; Path=/; Max-Age=${exp}; Secure; SameSite=Strict`;
+            }
+          }catch{}
+        }
+        return r;
+      }
+      const h=new Headers(init.headers||(typeof input!=='string'?input.headers:undefined)||{});
+      h.delete('authorization');h.delete('apikey');h.delete('x-clinic-pin');
+      return nativeFetch('/api/session',{...init,headers:h,credentials:'same-origin'});
+    }
     const mapped=MAP.get(url);
     if(!mapped)return nativeFetch(input,init);
     const h=new Headers(init.headers||(typeof input!=='string'?input.headers:undefined)||{});
     h.delete('authorization');h.delete('apikey');h.delete('x-clinic-pin');
     return nativeFetch(mapped,{...init,headers:h,credentials:'same-origin'});
   };
-  const tk=localStorage.getItem('clinic_session_token');
-  if(tk&&tk!=='http-only-cookie'){
-    localStorage.removeItem('clinic_session_token');
-    localStorage.removeItem('clinic_session_expires');
-  }
 
   const SAFE_EXACT=new Set([
     'login','logout','toggleSettings','renderGlobal','showTab','readProductImage','saveProduct','closeProduct','deleteProduct','openProduct','renderInventory','renderFoodBags','openFoodProduct','showPriceMode','renderPrices','openPrice','savePrice','closePrice','deletePrice','adjustQty','jumpProduct','jumpPrice','showInventoryMode',
