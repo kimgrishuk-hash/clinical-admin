@@ -17,3 +17,29 @@
   async function uploadImage(file){const prep=await callFiles({action:'prepare_upload',mime_type:file.type,size_bytes:file.size,category:'other'});const up=await fetch(prep.signed_url,{method:'PUT',headers:{'content-type':file.type},body:file});if(!up.ok)throw new Error('העלאת התמונה נכשלה');return 'storage:'+prep.path}
   window.saveProduct=async function(){const id=document.getElementById('prodId')?.value||'';let imageRef=typeof productImageData==='string'?productImageData:null;try{if(pendingFile)imageRef=await uploadImage(pendingFile)}catch(e){alert(e.message||'לא הצלחתי להעלות תמונה');return}const item={name:document.getElementById('prodName')?.value.trim()||'',category:document.getElementById('prodCat')?.value.trim()||'אחר',price_ils:document.getElementById('prodPrice')?.value??'',details:document.getElementById('prodDetails')?.value||'',image_url:imageRef||null,target_qty:document.getElementById('prodTarget')?.value??0,current_qty:document.getElementById('prodCurrent')?.value??0};if(!item.name)return alert('צריך שם מוצר');try{const j=await api({action:id?'update':'create',id,item});productImageData=j.item?.image_url||'';pendingFile=null;closeProduct();fillFilters();renderInventory()}catch(e){alert('לא הצלחתי לשמור: '+e.message)}};
 })();
+
+// Hosting-neutral API router. Legacy modules still reference Supabase Edge Function
+// URLs directly; route those calls through the same-origin /api endpoints so the
+// HttpOnly clinic session cookie works on Cloudflare (and any future host).
+window.addEventListener('load',()=>{
+  if(window.__clinicSameOriginApiRouter)return;window.__clinicSameOriginApiRouter=true;
+  const EDGE='https://bhvkhxmexyhsjhwjsytp.supabase.co/functions/v1/';
+  const routes=new Map([
+    [EDGE+'clinic-auth','/api/session'],
+    [EDGE+'clinic-api','/api/clinic'],
+    [EDGE+'clinic-tasks','/api/tasks'],
+    [EDGE+'clinic-ops','/api/ops'],
+    [EDGE+'clinic-assistant','/api/assistant'],
+    [EDGE+'clinic-files','/api/files'],
+    [EDGE+'clinic-sync','/api/sync']
+  ]);
+  const previousFetch=window.fetch.bind(window);
+  window.fetch=function(input,init={}){
+    const url=typeof input==='string'?input:String(input?.url||'');
+    const mapped=routes.get(url);
+    if(!mapped)return previousFetch(input,init);
+    const h=new Headers(init.headers||(typeof input!=='string'?input.headers:undefined)||{});
+    h.delete('authorization');h.delete('apikey');h.delete('x-clinic-pin');
+    return previousFetch(mapped,{...init,headers:h,credentials:'same-origin',cache:'no-store'});
+  };
+});
