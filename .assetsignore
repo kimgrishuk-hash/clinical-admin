@@ -1,0 +1,9 @@
+.git
+.github
+node_modules
+netlify
+cloudflare-worker.js
+wrangler.jsonc
+netlify.toml
+.assetsignore
+*.md
