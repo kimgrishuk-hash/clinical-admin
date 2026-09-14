@@ -27,7 +27,7 @@ window.assistantTestNotification=()=>{if(Notification.permission!=='granted')ret
 function renderInstall(){const btn=document.getElementById('assistantInstallBtn');if(!btn)return;if(installPrompt){btn.disabled=false;btn.textContent='התקנת מערכת המרפאה במחשב'}else{btn.disabled=true;btn.textContent='התקנה זמינה במחשב נתמך'}}
 window.assistantInstallApp=async()=>{if(!installPrompt)return;installPrompt.prompt();await installPrompt.userChoice;installPrompt=null;renderInstall()};
 function maybeLoad(){const sec=document.getElementById('assistant');if(sec&&!sec.classList.contains('hidden'))load()}
-function boot(){if(!localStorage.getItem('clinic_session_token'))return;addCss();addPwa();inject();const observer=new MutationObserver(maybeLoad);const sec=document.getElementById('assistant');if(sec)observer.observe(sec,{attributes:true,attributeFilter:['class']});maybeLoad();setInterval(checkDueNotifications,20000)}
+function boot(){addCss();addPwa();inject();const observer=new MutationObserver(maybeLoad);const sec=document.getElementById('assistant');if(sec)observer.observe(sec,{attributes:true,attributeFilter:['class']});maybeLoad();setInterval(checkDueNotifications,20000)}
 if(window.ClinicData){ClinicData.on('reminders',x=>{if(Array.isArray(x)){reminders=x;dataLoaded=true;renderReminders()}});ClinicData.on('inbox',x=>{if(Array.isArray(x)){inbox=x;dataLoaded=true;renderInbox()}})}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
