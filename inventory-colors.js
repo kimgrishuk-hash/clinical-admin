@@ -1,7 +1,7 @@
 (()=>{
   if(!document.querySelector('script[data-assistant-center]')){
     const s=document.createElement('script');
-    s.src='assistant-center.js?v=2';
+    s.src='assistant-center.js?v=3';
     s.dataset.assistantCenter='1';
     document.body.appendChild(s);
   }
