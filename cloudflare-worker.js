@@ -22,6 +22,11 @@ const API_ROUTES = {
     maxBytes: 512 * 1024,
     actions: new Set(['bootstrap','reminders_list','reminder_save','reminder_done','reminder_snooze','reminder_delete','inbox_list','inbox_update','connection_status'])
   },
+  '/api/gmail': {
+    slug: 'clinic-gmail',
+    maxBytes: 128 * 1024,
+    actions: new Set(['status','connect_url','sync'])
+  },
   '/api/files': {
     slug: 'clinic-files',
     maxBytes: 128 * 1024,
