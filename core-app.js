@@ -61,3 +61,5 @@ document.write('<script src="universal-edit.js?v=1"><'+'/script>');
 document.write('<script src="aml-pricebook.js?v=1"><'+'/script>');
 document.write('<script src="image-storage.js?v=1"><'+'/script>');
 document.write('<script src="home-ui.js?v=8" data-dynamic="home-ui"><'+'/script>');
+
+document.write('<script src="bot-information.js?v=1"><'+'/script>');

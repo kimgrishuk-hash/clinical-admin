@@ -15,7 +15,7 @@ const API_ROUTES = {
   '/api/ops': {
     slug: 'clinic-ops',
     maxBytes: 1024 * 1024,
-    actions: new Set(['list','save'])
+    actions: new Set(['list','save','bot_context'])
   },
   '/api/assistant': {
     slug: 'clinic-assistant',
