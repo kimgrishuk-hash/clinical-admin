@@ -28,3 +28,33 @@ body:after{width:300px;height:300px;right:-55px;bottom:10px;background-image:url
 .grid{gap:12px!important}.product{border-radius:16px!important;transition:.16s ease}.product:hover{transform:translateY(-2px);box-shadow:0 12px 26px rgba(31,76,116,.09)!important}.pic{height:112px!important;background:linear-gradient(180deg,#fbfdff,#f1f8fe)!important;border-bottom:1px solid #e3eff8!important}.product-info{padding:11px!important}.product h3{font-family:var(--font-ui)!important;font-size:14px!important;line-height:1.38!important;font-weight:700!important;color:#203e59!important;letter-spacing:0!important;unicode-bidi:plaintext}.product .cat{font-size:11px!important;color:#7b91a6!important}.price{font-size:13px!important;color:#2d73b9!important}.stockbox{border-top:1px solid #e5eef5!important}.qtybtn{background:#edf5fc!important;color:#2d6ba5!important}.target{color:#94a5b5!important}.ok{color:var(--success)!important}.low{color:var(--danger)!important}.pricegroup{padding:0!important;overflow:hidden;margin:14px 0!important}.pricegroup h3{margin:0;padding:15px 18px;background:linear-gradient(90deg,#edf7ff,#f8fcff);color:var(--navy);font-size:18px;border-bottom:1px solid #dceaf5}.price-row{padding:12px 16px!important;border-top:1px solid #edf3f8!important;font-size:14px!important}.price-row .name b{font-size:14px!important;line-height:1.4;unicode-bidi:plaintext}.price-row:hover{background:#fbfdff}.member{color:#277c68!important}.muted{color:#74899c!important}.login{padding:28px!important;margin:11vh auto!important;border-radius:22px!important;box-shadow:0 22px 56px rgba(35,83,125,.11)!important}.login h1{color:var(--navy);font-size:28px;margin-bottom:6px}
 
 @media(max-width:700px){.wrap{padding:10px!important}.top{top:6px;border-radius:16px}.brand{font-size:18px!important}.staff-hero{padding:25px 20px 24px;border-radius:20px;min-height:170px}.hero-title{font-size:31px}.hero-sub{font-size:14px}.staff-hero:after{font-size:24px;left:18px}.grid{gap:7px!important}.pic{height:88px!important}.tabs{overflow:auto;flex-wrap:nowrap!important;padding-bottom:2px}.tab,.subtab{white-space:nowrap}.price-row{padding:10px!important}}
+
+/* Clearer boundaries and calmer contrast for daily clinic work. */
+:root{--line:#aebfce;--muted:#4f6478;--text:#18324f}
+html,body{background:#e7edf3!important}
+body:before,body:after{opacity:.06}
+#app .muted,#app .target,#app .product .cat,
+#app .clinic-module-grid small,#app .clinic-status-row small{color:#4f6478!important}
+#app .card,#app .clinic-status-row article{border-color:#aebfce!important;background:#fff!important;box-shadow:0 3px 10px rgba(24,50,79,.08)!important}
+#app .clinic-module-grid>button{border:1px solid #91a8bc!important;background:#fff!important;box-shadow:0 3px 10px rgba(24,50,79,.09)!important}
+#app .clinic-module-grid>button:hover{border-color:#426b8e!important;background:#f1f6fa!important}
+#app .btn,#app .tab,#app .subtab,#app .qtybtn,
+#app .ops-links button,#app .ops-cards button{border:1px solid #829bb1!important;background:#e5eef6!important;color:#234b6d!important;box-shadow:0 2px 3px rgba(24,50,79,.08)}
+#app .btn:hover,#app .tab:hover,#app .subtab:hover,#app .qtybtn:hover{background:#d5e4f0!important;border-color:#436c8e!important;transform:none}
+#app .btn.primary,#app .btn.active,#app .tab.active,#app .subtab.active{background:#245b88!important;color:#fff!important;border-color:#19456b!important;box-shadow:inset 0 -3px 0 #143858!important}
+#app .btn.danger{background:#fce9eb!important;color:#942a38!important;border-color:#bd7f88!important}
+#app .tabs{gap:10px!important;padding:8px;background:#dce5ee;border:1px solid #b4c4d2;border-radius:12px}
+#app input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=range]),
+#app textarea,#app select,#login .search{border:1px solid #8299ad!important;background:#fff!important;color:#18324f!important;box-shadow:inset 0 1px 3px rgba(24,50,79,.06)!important}
+#app input::placeholder,#app textarea::placeholder,#login input::placeholder{color:#5b6e80!important;opacity:1}
+#app input:focus,#app textarea:focus,#app select:focus{border-color:#245b88!important;outline:2px solid #245b88!important;outline-offset:2px}
+#app button:focus-visible{outline:3px solid #bf5c19!important;outline-offset:3px}
+#app .panel>.sectionbar,#app .panel>.row{background:#edf2f7;border:1px solid #bdcbd7;padding:8px}
+#app .price-row,#app .stockbox{border-top-color:#bdcbd7!important}
+#app .bot-faq-row{border-color:#a2b5c5!important;background:#f4f7fa}
+#clinicSidebar nav{gap:7px}
+#clinicSidebar nav button{border:1px solid rgba(216,231,246,.25);background:rgba(255,255,255,.04);color:#f1f6fc}
+#clinicSidebar nav button:hover{background:#204b75;border-color:#8bafd0}
+#clinicSidebar nav button.active{background:#2b608d!important;border-color:#b1d0e9;color:#fff!important;box-shadow:inset -4px 0 0 #fff}
+#clinicSidebar nav button:focus-visible{outline-color:#fff!important}
+#app button:disabled{opacity:.55;cursor:not-allowed}
