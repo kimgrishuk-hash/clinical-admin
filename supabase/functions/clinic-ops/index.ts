@@ -25,7 +25,7 @@ Deno.serve(async(req)=>{
       const rows=await settings.json(),info=rows[0]?.data||{};
       const approved=info.approved===true;
       const publicPrices:any[]=[];
-      return J(req,{info:{name:info.name||'',phone:info.phone||'',greeting:info.greeting||'',address:approved?info.address||'':'',hours:approved?info.hours||'':'',appointment_policy:info.appointment_policy||'',emergency_message:info.emergency_message||'',faq:(Array.isArray(info.faq)?info.faq:[]).filter((x:any)=>x.enabled&&x.question&&x.answer).map((x:any)=>({question:x.question,answer:x.answer}))},prices:publicPrices,updated_at:info.updated_at||null});
+      return J(req,{info:{name:info.name||'',phone:info.phone||'',greeting:info.greeting||'',address:approved?info.address||'':'',hours:approved?info.hours||'':'',appointment_policy:info.appointment_policy||'',emergency_message:info.emergency_message||'',faq:(Array.isArray(info.faq)?info.faq:[]).filter((x:any)=>x.enabled&&x.question&&x.answer).map((x:any)=>({question:x.question,answer:x.answer,aliases:Array.isArray(x.aliases)?x.aliases.filter((a:any)=>typeof a==='string').slice(0,30):[]}))},prices:publicPrices,updated_at:info.updated_at||null});
     }
     if(b.action==='list'){
       const r=await fetch(URL+'/rest/v1/clinic_ops?select=key,data,updated_at',{headers:H});

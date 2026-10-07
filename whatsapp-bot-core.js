@@ -2,6 +2,7 @@
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.ClinicWhatsAppBot=api;})(typeof globalThis!=='undefined'?globalThis:this,()=>{
  const menu=['קביעת תור','שאלה רפואית','שעות וכתובת','מקרה דחוף','נציגת המרפאה'];
  const urgent=/מקרה דחוף|חירום|לא נושם|לא נושמת|קושי בנשימה|קשיי נשימה|מתעלף|התעלף|פרכוס|פרכוסים|דימום רב|אכל רעל|אכלה רעל|הרעלה|לא מצליח להשתין|לא מצליחה להשתין/;
+ const normalize=s=>String(s||'').normalize('NFKC').replace(/[?!.,״"'׳:]/g,'').trim().toLowerCase().replace(/\s+/g,' ');
  function create(){return {stage:'menu',topic:'',details:{},handoff:false,priority:'normal'};}
  function respond(state,input,config={}){
   const s={...state,details:{...state.details}}, text=String(input||'').trim().slice(0,2000);
@@ -11,7 +12,7 @@
   if(urgent.test(text))return emergency();
   if(s.handoff)return result('השיחה ממתינה לנציגת המרפאה. הבוט מושהה עד שהצוות יטפל בפנייה.');
   if(!text||/^(תפריט|היי|שלום|התחלה|חזרה)$/.test(text)){s.stage='menu';return result(config.greeting||'היי! הגעתם למרפאה הווטרינרית של ד״ר לזר. במה אפשר לעזור?',menu);}
-  const faq=(config.faq||[]).find(f=>f.question===text);if(faq&&s.stage==='menu')return result(faq.answer,menu);const choice=menu[Number(text)-1]||text;
+  if(/מחיר|כמה עולה|עלות/.test(text)){transfer('שאלה לצוות');return result('מחירי הטיפולים נקבעים על ידי צוות המרפאה בהתאם למקרה. בפעילות אמיתית השאלה תועבר לנציגה.');}const faq=(config.faq||[]).find(f=>f.enabled!==false&&[f.question,...(Array.isArray(f.aliases)?f.aliases:[])].some(q=>normalize(q)===normalize(text)));if(faq&&s.stage==='menu')return result(faq.answer,menu);const choice=menu[Number(text)-1]||text;
   if(choice==='מקרה דחוף')return emergency();
   if(/נציג|רופא|אנושי/.test(choice)){transfer('נציגת המרפאה');return result('בפעילות אמיתית הפנייה תועבר לנציגת המרפאה. מענה יינתן בהתאם לזמינות הצוות.');}
   if(/מחיר|כמה עולה|עלות/.test(text)){transfer('שאלה לצוות');return result('מחירי הטיפולים נקבעים על ידי צוות המרפאה בהתאם למקרה. בפעילות אמיתית השאלה תועבר לנציגה.');}
