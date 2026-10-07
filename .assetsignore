@@ -8,3 +8,5 @@ wrangler.jsonc
 netlify.toml
 .assetsignore
 *.md
+
+tests
