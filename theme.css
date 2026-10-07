@@ -52,9 +52,52 @@ body:before,body:after{opacity:.06}
 #app .panel>.sectionbar,#app .panel>.row{background:#edf2f7;border:1px solid #bdcbd7;padding:8px}
 #app .price-row,#app .stockbox{border-top-color:#bdcbd7!important}
 #app .bot-faq-row{border-color:#a2b5c5!important;background:#f4f7fa}
-#clinicSidebar nav{gap:7px}
-#clinicSidebar nav button{border:1px solid rgba(216,231,246,.25);background:rgba(255,255,255,.04);color:#f1f6fc}
-#clinicSidebar nav button:hover{background:#204b75;border-color:#8bafd0}
-#clinicSidebar nav button.active{background:#2b608d!important;border-color:#b1d0e9;color:#fff!important;box-shadow:inset -4px 0 0 #fff}
-#clinicSidebar nav button:focus-visible{outline-color:#fff!important}
 #app button:disabled{opacity:.55;cursor:not-allowed}
+
+/* Muted blue, rose, green and purple surfaces; original sidebar styling. */
+:root{--navy:#294b70;--blue:#38668c;--sky:#c6d7e6;--sky2:#d5dfe9;--line:#8fa3b7;--muted:#465b70;--success:#316751;--danger:#963e5a}
+html,body{background:#c6cfda!important}
+body:before,body:after{display:none}
+#app .card,#app .clinic-status-row article,#login.card{background:#dbe3ec!important;border-color:#94a7ba!important}
+#app .panel>.sectionbar,#app .panel>.row{background:#cbd7e3;border-color:#9bafc1}
+#app .clinic-module-grid>button{background:#c8d8e7!important;border-color:#7994ae!important;color:#213f60!important}
+#app .clinic-module-grid>button:nth-child(4n+2){background:#ddc8d3!important;border-color:#ab8296!important;color:#63384f!important}
+#app .clinic-module-grid>button:nth-child(4n+3){background:#c6d9ce!important;border-color:#7f9e8d!important;color:#2d5742!important}
+#app .clinic-module-grid>button:nth-child(4n){background:#cfc8df!important;border-color:#9484ad!important;color:#4a3a67!important}
+#app .clinic-module-grid>button:hover{filter:brightness(.95);transform:none}
+#app .clinic-module-grid small{color:inherit!important}
+#app .module-icon,#app .status-icon{background:#3b658b;color:#fff}
+#app .module-icon.pink,#app .status-icon.pink{background:#985e7a;color:#fff}
+#app .clinic-module-grid>button:nth-child(4n+3) .module-icon{background:#45735b;color:#fff}
+#app .clinic-module-grid>button:nth-child(4n) .module-icon{background:#705a91;color:#fff}
+#app .clinic-status-row article:nth-child(1){background:#cbd9e6!important}
+#app .clinic-status-row article:nth-child(2){background:#ddcbd5!important}
+#app .clinic-status-row article:nth-child(3){background:#cbdccd!important}
+#app .btn,#app .tab,#app .subtab,#app .qtybtn,#app .ops-links button{background:#c4d4e3!important;border-color:#758fa8!important;color:#234768!important}
+#app .btn:hover,#app .tab:hover,#app .subtab:hover,#app .qtybtn:hover{background:#afc4d7!important}
+#app .btn.primary,#app .btn.active,#app .tab.active,#app .subtab.active{background:#365f86!important;color:#fff!important;border-color:#254460!important}
+#app .btn.danger{background:#d8bbc9!important;color:#702d47!important;border-color:#a8788e!important}
+#app .tabs{background:#bccbdc;border-color:#8da3bb}
+#app input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=range]),
+#app textarea,#app select,#login .search{background:#e1e7ee!important;border-color:#788da3!important}
+#app .pricegroup h3,#app .pic{background:#bccfe0!important}
+#app .bot-faq-row{background:#cfc8de;border-color:#9484ad!important}
+#app .bot-faq-test{background:#c0d5c8;border-color:#6b927c}
+#app .bot-info-card:nth-child(2){background:#dbccd6!important}
+#clinicOps .ops-cards button{background:#ccd9e7!important;border-color:#8a9eb3!important}
+#clinicOps .ops-cards button:nth-child(2){background:#d8cadf!important;border-color:#9a84ae!important}
+#clinicOps .ops-cards button:nth-child(3){background:#c7d8ce!important;border-color:#7d9b89!important}
+#app .global-results,#app .clinic-message-card{background:#dbe3ec!important}
+#app .clinic-message-card>div button{background:#c9d7e5;border-color:#829ab0;color:#244867}
+#app .price-row:hover{background:#c7d7e5}
+#inventoryGrid .product .pic::before{background:none}
+#app #inventoryGrid .product[data-category-tone="0"] .pic{background:#bdd0e1!important}
+#app #inventoryGrid .product[data-category-tone="1"] .pic{background:#bed3c5!important}
+#app #inventoryGrid .product[data-category-tone="2"] .pic{background:#d9bece!important}
+#app #inventoryGrid .product[data-category-tone="3"] .pic{background:#c9bfd9!important}
+#app #inventoryGrid .product[data-category-tone="4"] .pic{background:#bdd0e1!important}
+#app #inventoryGrid .product[data-category-tone="5"] .pic{background:#bed3c5!important}
+#app #inventoryGrid .product[data-category-tone="6"] .pic{background:#d9bece!important}
+#app #inventoryGrid .product[data-category-tone="7"] .pic{background:#c9bfd9!important}
+#app #inventoryGrid .product[data-category-tone="8"] .pic{background:#bdd0e1!important}
+#app #inventoryGrid .product[data-category-tone="9"] .pic{background:#bed3c5!important}
