@@ -1,3 +1,5 @@
+import { classify, summarizeEmail, hasAttachment, decodeHtmlEntities } from './email-processing.js';
+
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID') || '';
@@ -121,12 +123,13 @@ function decodeBody(value = '') {
 }
 
 function htmlToText(value: string) {
-  return value.replace(/<style[\s\S]*?<\/style>/gi, ' ').replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<br\s*\/?>/gi, '\n').replace(/<\/p>/gi, '\n').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/&amp;/gi, '&').replace(/&lt;/gi, '<').replace(/&gt;/gi, '>').replace(/&quot;/gi, '"').replace(/&#39;/gi, "'").replace(/[ \t]+/g, ' ').replace(/\n\s*\n\s*\n/g, '\n\n').trim();
+  const text = value.replace(/<style[\s\S]*?<\/style>/gi, ' ').replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<br\s*\/?>/gi, '\n').replace(/<\/p>/gi, '\n').replace(/<[^>]+>/g, ' ');
+  return decodeHtmlEntities(text).replace(/[ \t]+/g, ' ').replace(/\n\s*\n\s*\n/g, '\n\n').trim();
 }
 
 function messageText(payload: any): string {
   if (!payload) return '';
-  if (payload.mimeType === 'text/plain' && payload.body?.data) return decodeBody(payload.body.data);
+  if (payload.mimeType === 'text/plain' && payload.body?.data) return decodeHtmlEntities(decodeBody(payload.body.data));
   for (const part of payload.parts || []) {
     const text = messageText(part);
     if (text) return text;
@@ -142,15 +145,6 @@ function header(message: any, name: string) {
 function sender(value: string) {
   const match = value.match(/^\s*"?([^"<]*)"?\s*<([^>]+)>/);
   return match ? { name: match[1].trim(), address: match[2].trim() } : { name: value.split('@')[0].trim(), address: value.trim() };
-}
-
-function classify(subject: string, body: string) {
-  const value = `${subject} ${body}`.toLowerCase();
-  if (/דחוף|urgent|emergency|קושי בנשימה|לא מגיב/.test(value)) return { category: 'דורש בדיקה', priority: 'urgent' };
-  if (/תוצאות|results|laboratory|מעבדה|בדיק/.test(value)) return { category: 'תוצאות מעבדה', priority: 'high' };
-  if (/חשבונית|invoice|קבלה|receipt|payment/.test(value)) return { category: 'כספים ומסמכים', priority: 'normal' };
-  if (/תור|appointment|schedule/.test(value)) return { category: 'קביעת תור', priority: 'normal' };
-  return { category: 'מייל חדש', priority: 'normal' };
 }
 
 async function gmailJson(url: string, accessToken: string) {
@@ -174,12 +168,13 @@ async function syncMessages() {
     const body = messageText(message.payload).slice(0, 30000);
     const preview = String(message.snippet || body).slice(0, 1000);
     const result = classify(subject, body);
+    const categorySummary = summarizeEmail(result.category, subject, body, hasAttachment(message.payload));
     return {
       channel: 'gmail', external_id: String(message.id), thread_id: String(message.threadId || message.id),
       sender_name: from.name.slice(0, 200) || null, sender_address: from.address.slice(0, 320) || null,
-      subject, preview, body_text: body || preview, category: result.category, priority: result.priority,
+      subject, preview, body_text: body || preview, category: result.category, priority: 'normal',
       status: 'new', received_at: new Date(Number(message.internalDate || Date.now())).toISOString(),
-      metadata: { gmail_label_ids: message.labelIds || [], ai_summary: `מייל מאת ${from.name || from.address || 'שולח לא מזוהה'} בנושא “${subject || 'ללא נושא'}”. ${preview}`.slice(0, 1200), draft_reply: '', assigned_to: result.priority === 'urgent' ? 'רופא/ה' : 'קבלה' },
+      metadata: { gmail_label_ids: message.labelIds || [], ai_summary: categorySummary, draft_reply: '', assigned_to: result.assigned_to },
       updated_at: new Date().toISOString()
     };
   });
