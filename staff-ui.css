@@ -25,3 +25,12 @@ html,body{background:#f4f7fa!important;color:#22364a}.shell{max-width:1380px}.to
 #taskDrawer .task-new-grid>*,
 #taskDrawer .comment-form-grid>*{min-width:0}
 @media(max-width:1050px){#taskDrawer .comment-form-grid{grid-template-columns:1fr}}
+
+.staff-schedule{margin-top:12px;padding:12px;border-radius:10px;background:#eaf3ff;border:1px solid #b7d4f4}
+.staff-schedule .staff-schedule-check{font-size:14px;color:#184b79;display:flex;align-items:center;gap:8px;cursor:pointer}
+.staff-schedule-check input{width:18px!important;height:18px;accent-color:#246caa}
+#staffScheduleFields{margin-top:10px}
+#staffScheduleFields.hidden{display:none!important}
+#staffScheduleFields label{font-size:12px}
+#staffScheduleFields input{width:100%;font-size:15px;direction:ltr;text-align:right}
+#staffScheduleFields small{display:block;margin-top:7px;color:#4b6a88;font-size:11px}
