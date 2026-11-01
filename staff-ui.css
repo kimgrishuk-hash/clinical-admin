@@ -7,3 +7,21 @@ html,body{background:#f4f7fa!important;color:#22364a}.shell{max-width:1380px}.to
 /* Food bags are a separate top-level section; show the section name only in Hebrew. */
 .tab[data-tab="foodbags"]{font-size:0!important}.tab[data-tab="foodbags"]:after{content:"שקי אוכל";font-size:13px;font-weight:700}
 #foodbags .sectionbar h2{font-size:0!important}#foodbags .sectionbar h2:after{content:"שקי אוכל";font-size:25px;font-weight:700;color:#173a5f}
+
+/* Keep staff messages completely outside the fixed navigation rail. */
+@media(min-width:681px){
+  #taskDrawer.task-drawer{right:220px!important;left:auto!important;width:min(560px,calc(100vw - 244px))!important;max-width:calc(100vw - 244px)!important;z-index:120!important}
+}
+@media(min-width:681px) and (max-width:900px){
+  #taskDrawer.task-drawer{right:188px!important;width:min(560px,calc(100vw - 208px))!important;max-width:calc(100vw - 208px)!important}
+}
+@media(max-width:680px){
+  #taskDrawer.task-drawer{right:0!important;left:0!important;top:0!important;bottom:68px!important;width:100%!important;max-width:100%!important;z-index:120!important}
+}
+#taskOverlay.task-overlay{z-index:110!important}
+#taskDrawer .task-head{flex-shrink:0}
+#taskDrawer .task-body{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+#taskDrawer .task-new-grid,#taskDrawer .comment-form-grid{min-width:0}
+#taskDrawer .task-new-grid>*,
+#taskDrawer .comment-form-grid>*{min-width:0}
+@media(max-width:1050px){#taskDrawer .comment-form-grid{grid-template-columns:1fr}}
