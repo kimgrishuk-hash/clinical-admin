@@ -26,7 +26,7 @@ async function pollStaffReminders(){
  if(r.done||!String(r.notes||'').includes('[staff-task:')||Date.parse(r.remind_at)>now)continue;
  const key=String(r.id)+'|'+r.remind_at;
  if(now-(staffAlertTimes.get(key)||0)<900000)continue;
- const opts={body:'המשימה עדיין פתוחה. היכנסו להודעות הצוות כדי לטפל או לדחות.',tag:'staff-reminder-'+r.id,renotify:true,requireInteraction:true,icon:'clinic-app-icon.svg'};
+ const opts={body:'המשימה עדיין פתוחה. היכנסו להודעות הצוות כדי לטפל או לדחות.',tag:'clinic-reminder-'+r.id,renotify:true,requireInteraction:true,icon:'clinic-app-icon.svg'};
  try{const reg='serviceWorker'in navigator?await navigator.serviceWorker.getRegistration():null;if(reg)await reg.showNotification('🔔 '+r.title,opts);else new Notification('🔔 '+r.title,opts);staffAlertTimes.set(key,now)}catch(e){console.warn('Staff notification error',e)}
  }
  }catch(e){console.warn('Staff reminder polling error',e)}
