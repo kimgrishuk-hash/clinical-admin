@@ -41,3 +41,9 @@ html,body{background:#f4f7fa!important;color:#22364a}.shell{max-width:1380px}.to
 #taskOverlay.task-overlay:not(.open){pointer-events:none!important}
 #staffScheduleDate.hidden{display:none!important}
 #newTaskScheduleMode{width:100%;margin:6px 0;border:1px solid #b7d4f4;border-radius:8px;padding:9px;background:white}
+
+/* Drawer is a viewport-level portal, never a child of a transformed application shell. */
+#taskDrawer.task-drawer{position:fixed!important;top:0!important;bottom:0!important;box-sizing:border-box!important;max-height:100dvh!important}
+#taskDrawer.task-drawer:not(.open){display:none!important}
+#taskDrawer.task-drawer.open{display:flex!important;transform:none!important;visibility:visible!important;pointer-events:auto!important}
+#taskOverlay.task-overlay:not(.open){display:none!important}
