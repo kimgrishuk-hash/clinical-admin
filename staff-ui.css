@@ -34,3 +34,10 @@ html,body{background:#f4f7fa!important;color:#22364a}.shell{max-width:1380px}.to
 #staffScheduleFields label{font-size:12px}
 #staffScheduleFields input{width:100%;font-size:15px;direction:ltr;text-align:right}
 #staffScheduleFields small{display:block;margin-top:7px;color:#4b6a88;font-size:11px}
+
+/* Drawer is fully removed from the screen after close, never left as a side strip. */
+#taskDrawer.task-drawer:not(.open){transform:translateX(calc(-100vw - 100%))!important;visibility:hidden!important;pointer-events:none!important;transition:visibility 0s linear .2s,transform .2s ease!important}
+#taskDrawer.task-drawer.open{transform:translateX(0)!important;visibility:visible!important;pointer-events:auto!important}
+#taskOverlay.task-overlay:not(.open){pointer-events:none!important}
+#staffScheduleDate.hidden{display:none!important}
+#newTaskScheduleMode{width:100%;margin:6px 0;border:1px solid #b7d4f4;border-radius:8px;padding:9px;background:white}
