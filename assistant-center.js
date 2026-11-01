@@ -65,7 +65,7 @@ function checkDueNotifications(){
   if(!dataLoaded||document.visibilityState==='hidden'||!('Notification'in window)||Notification.permission!=='granted')return;
   const now=Date.now();
   for(const x of reminders){
-    if(x.done||!Number.isFinite(Date.parse(x.remind_at))||Date.parse(x.remind_at)>now)continue;
+    if(x.done||String(x.notes||'').includes('[staff-task:')||!Number.isFinite(Date.parse(x.remind_at))||Date.parse(x.remind_at)>now)continue;
     const key=String(x.id),previous=notified.get(key);
     if(previous&&previous.remindAt===x.remind_at&&now-previous.at<ALERT_INTERVAL_MS)continue;
     notified.set(key,{remindAt:x.remind_at,at:now});
