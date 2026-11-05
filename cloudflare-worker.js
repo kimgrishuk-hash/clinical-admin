@@ -63,7 +63,7 @@ function cookies(request) {
 }
 
 function sessionCookie(token, expiresAt) {
-  const exp = Math.max(60, Math.min(43200, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000) || 43200));
+  const exp = Math.max(60, Math.min(86400, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000) || 86400));
   return `${COOKIE}=${encodeURIComponent(token)}; Path=/; Max-Age=${exp}; HttpOnly; Secure; SameSite=Strict; Priority=High`;
 }
 
@@ -114,12 +114,12 @@ async function proxyApi(request, cfg) {
   }
 }
 
-async function authUpstream(request, action, password = '', token = '') {
+async function authUpstream(request, action, password = '', token = '', trustedDevice = false) {
   const headers = { 'content-type': 'application/json' };
   if (token) headers.authorization = `Bearer ${token}`;
   const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || '';
   if (ip) headers['x-forwarded-for'] = ip.split(',')[0].trim();
-  const payload = action === 'login' ? { action, password } : { action };
+  const payload = action === 'login' ? { action, password, trusted_device: trustedDevice } : { action };
   const upstream = await fetch(BASE + 'clinic-auth', {
     method: 'POST',
     headers,
@@ -141,7 +141,7 @@ async function session(request) {
     if (action === 'login') {
       const password = String(parsed.body.password || '');
       if (password.length < 8 || password.length > 128) return response(401, { error: 'invalid credentials' });
-      const { upstream, data } = await authUpstream(request, 'login', password);
+      const { upstream, data } = await authUpstream(request, 'login', password, '', parsed.body.trusted_device === true);
       if (!upstream.ok || !data.token) {
         return response(upstream.status || 401, data?.error ? data : { error: 'invalid credentials' });
       }
