@@ -12,21 +12,8 @@
   window.fetch=async function(input,init={}){
     const url=typeof input==='string'?input:String(input?.url||'');
     if(url===AUTH){
-      let action='';
-      try{action=JSON.parse(String(init.body||'{}')).action||''}catch{}
-      if(action==='login'){
-        const r=await nativeFetch(input,init);
-        if(r.ok){
-          try{
-            const j=await r.clone().json();
-            if(j?.token){
-              const exp=Math.max(60,Math.min(43200,Math.floor((new Date(j.expires_at).getTime()-Date.now())/1000)||43200));
-              document.cookie=`__Host-clinic_session=${encodeURIComponent(j.token)}; Path=/; Max-Age=${exp}; Secure; SameSite=Strict`;
-            }
-          }catch{}
-        }
-        return r;
-      }
+      // All authentication actions go through the same-origin HttpOnly cookie proxy.
+      // Never send session tokens to client-side JavaScript or localStorage.
       const h=new Headers(init.headers||(typeof input!=='string'?input.headers:undefined)||{});
       h.delete('authorization');h.delete('apikey');h.delete('x-clinic-pin');
       return nativeFetch('/api/session',{...init,headers:h,credentials:'same-origin'});
