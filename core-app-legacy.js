@@ -15,9 +15,24 @@ function applyInventory(items){products=Array.isArray(items)?items:[];inventoryL
 function applyPrices(items){prices=Array.isArray(items)?items:[];pricesLoaded=true;fillPriceFilter();renderPrices()}
 async function loadInitial(existingBoot=null){if(initialLoadPromise)return initialLoadPromise;initialLoadPromise=(async()=>{try{const j=existingBoot||(window.ClinicData?await ClinicData.bootstrap():{inventory:(await api({action:'list'})).items||[]});applyInventory(j.inventory||window.ClinicData?.cache?.('inventory')||[]);return j}catch(e){if(e.message==='unauthorized')return showLogin('ההתחברות פגה — התחברי מחדש');console.error('initial clinic load',e);alert('שגיאה בטעינת המערכת: '+e.message)}})();try{return await initialLoadPromise}finally{initialLoadPromise=null}}
 function showApp(bootData=null){$('login')?.classList.add('hidden');$('app')?.classList.remove('hidden');loadInitial(bootData)}
-async function login(){const password=$('pin')?.value||'';const btn=document.querySelector('#login button');if(!password)return showLogin('צריך להזין סיסמה');if(btn){btn.disabled=true;btn.textContent='מתחברת...'}try{const j=await postJson(LOGIN_API_URL,{action:'login',password},false);localStorage.setItem(SESSION_TOKEN_KEY,j.token);localStorage.setItem(SESSION_EXP_KEY,j.expires_at);if($('pin'))$('pin').value='';showApp()}catch(e){if(e.message==='too many attempts')showLogin('יותר מדי ניסיונות. נסי שוב בעוד כמה דקות.');else if(e.status===401||e.message==='invalid credentials')showLogin('סיסמה לא נכונה');else showLogin('לא ניתן להתחבר לשרת כרגע')}finally{if(btn){btn.disabled=false;btn.textContent='כניסה למערכת'}}}
-async function logout(){try{if(sessionToken())await postJson(LOGIN_API_URL,{action:'logout'},true)}catch{}try{window.ClinicData?.closeRealtime?.()}catch{}localStorage.removeItem(SESSION_TOKEN_KEY);localStorage.removeItem(SESSION_EXP_KEY);location.reload()}
-async function restoreSession(){const t=sessionToken(),exp=localStorage.getItem(SESSION_EXP_KEY);if(!t||!exp||new Date(exp)<=new Date()){localStorage.removeItem(SESSION_TOKEN_KEY);localStorage.removeItem(SESSION_EXP_KEY);return showLogin()}try{if(window.ClinicData){const boot=await ClinicData.bootstrap();showApp(boot)}else{await postJson(LOGIN_API_URL,{action:'validate'},true);showApp()}}catch{localStorage.removeItem(SESSION_TOKEN_KEY);localStorage.removeItem(SESSION_EXP_KEY);showLogin('ההתחברות פגה — התחברי מחדש')}}
+async function login(){const password=$('pin')?.value||'';const btn=document.querySelector('#login button');if(!password)return showLogin('צריך להזין סיסמה');if(btn){btn.disabled=true;btn.textContent='מתחברת...'}try{const j=await postJson(LOGIN_API_URL,{action:'login',password,trusted_device:!!$('trustedClinicDevice')?.checked},false);localStorage.setItem(SESSION_TOKEN_KEY,j.token);localStorage.setItem(SESSION_EXP_KEY,j.expires_at);if($('pin'))$('pin').value='';showApp()}catch(e){if(e.message==='too many attempts')showLogin('יותר מדי ניסיונות. נסי שוב בעוד כמה דקות.');else if(e.status===401||e.message==='invalid credentials')showLogin('סיסמה לא נכונה');else showLogin('לא ניתן להתחבר לשרת כרגע')}finally{if(btn){btn.disabled=false;btn.textContent='כניסה למערכת'}}}
+async function logout(){try{await postJson(LOGIN_API_URL,{action:'logout'},false)}catch{}try{window.ClinicData?.closeRealtime?.()}catch{}localStorage.removeItem(SESSION_TOKEN_KEY);localStorage.removeItem(SESSION_EXP_KEY);location.reload()}
+async function restoreSession(){
+  // Validate the server-side HttpOnly cookie; localStorage is not a source of authority.
+  // This also restores sessions when the localStorage marker is missing or outdated.
+  try{
+    const j=await postJson(LOGIN_API_URL,{action:'validate'},false);
+    localStorage.setItem(SESSION_TOKEN_KEY,'http-only-cookie');
+    if(j.expires_at)localStorage.setItem(SESSION_EXP_KEY,j.expires_at);
+    showApp();
+  }catch(e){
+    if(e.status===401){
+      localStorage.removeItem(SESSION_TOKEN_KEY);
+      localStorage.removeItem(SESSION_EXP_KEY);
+      showLogin();
+    }else showLogin('לא ניתן לבדוק את החיבור כרגע — נסו לרענן את הדף');
+  }
+}
 function toggleSettings(){settingsMode=!settingsMode;$('settingsBtn').classList.toggle('settings-on',settingsMode);$('settingsBtn').textContent=settingsMode?'✅ יציאה מהגדרות':'⚙️ הגדרות עריכה';$('settingsNote').classList.toggle('hidden',!settingsMode);$('newProductBtn').classList.toggle('hidden',!settingsMode);$('newFoodProductBtn').classList.toggle('hidden',!settingsMode);$('newPriceBtn').classList.toggle('hidden',!settingsMode);if(!settingsMode){closeProduct();closePrice()}renderInventory();if(pricesLoaded)renderPrices();renderProductPrices()}
 async function ensureInventory(){if(inventoryLoaded)return products;try{const items=window.ClinicData?await ClinicData.inventory():(await api({action:'list'})).items||[];applyInventory(items);return products}catch(e){if(e.message==='unauthorized')showLogin('ההתחברות פגה — התחברי מחדש');else alert('שגיאה בטעינת המלאי: '+e.message);return []}}
 async function ensurePrices(){if(pricesLoaded)return prices;if(priceLoadPromise)return priceLoadPromise;priceLoadPromise=(async()=>{try{const items=window.ClinicData?await ClinicData.prices():(await api({action:'price_list'})).items||[];applyPrices(items);return prices}catch(e){if(e.message==='unauthorized')showLogin('ההתחברות פגה — התחברי מחדש');else alert('שגיאה בטעינת המחירון: '+e.message);return []}finally{priceLoadPromise=null}})();return priceLoadPromise}
