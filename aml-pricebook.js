@@ -12,6 +12,8 @@ let amlMode=false,installed=false;
 const e=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const isAml=x=>String(x?.category||'').startsWith(AML_PREFIX);
 const sortNatural=(a,b)=>collator.compare(String(a),String(b));
+const byPricebookOrder=(a,b)=>Number(a.sort_order||999999)-Number(b.sort_order||999999)||Number(a.id||0)-Number(b.id||0);
+const orderedCategories=rows=>[...new Set([...rows].sort(byPricebookOrder).map(x=>x.category).filter(Boolean))];
 const num=v=>{const n=Number(v);return Number.isFinite(n)?n:0};
 const money=v=>num(v).toLocaleString('he-IL',{maximumFractionDigits:2})+' ₪';
 const memberMoney=v=>Math.ceil(num(v)).toLocaleString('he-IL')+' ₪';
@@ -21,7 +23,7 @@ function allPrices(){try{return Array.isArray(prices)?prices:[]}catch{return []}
 function editing(){try{return !!settingsMode}catch{return false}}
 
 function filterOptions(amlOnly){
- const raw=[...new Set((amlOnly?allPrices().filter(isAml):allPrices().filter(x=>!isAml(x))).map(x=>x.category).filter(Boolean))].sort(sortNatural);
+ const raw=orderedCategories(amlOnly?allPrices().filter(isAml):allPrices().filter(x=>!isAml(x)));
  return raw.map(c=>({value:c,label:amlOnly?c.replace(AML_PREFIX,''):c}));
 }
 function syncCategoryFilter(amlOnly,reset=false){
@@ -38,8 +40,8 @@ function renderPriceRows(){
  syncCategoryFilter(amlMode,false);
  const q=String(search.value||'').trim().toLowerCase(),cat=select.value||'';let arr=allPrices();arr=arr.filter(x=>amlMode?isAml(x):!isAml(x));
  arr=arr.filter(x=>(!cat||x.category===cat)&&(!q||(String(x.name||'')+' '+String(x.category||'')+' '+String(x.note||'')).toLowerCase().includes(q)));
- const groups={};arr.forEach(x=>(groups[x.category]??=[]).push(x));const canEdit=editing();
- list.innerHTML=Object.keys(groups).sort(sortNatural).map(c=>{const heading=amlMode?c.replace(AML_PREFIX,''):c;return `<div class="card pricegroup"><h3>${e(heading)}</h3>${groups[c].map(x=>`<div class="price-row"><div class="name"><b>${e(x.name)}</b>${x.note?`<div class="muted">${e(x.note)}</div>`:''}</div><div><span class="muted">רגיל:</span> <b>${regularRange(x)}</b></div>${isAml(x)?`<div class="aml-sample-fee"><span class="muted">הכנת דגימה במרפאה:</span> <b>${money(AML_SAMPLE_FEE)}</b></div>`:(typeof isRetailPriceItem==='function'&&isRetailPriceItem(x))?'':(String(x.member_price_text??'').trim()?`<div class="member">${x.category==='מנויים'?'מחיר מנוי מרפאה:':'מנוי זהב:'} ${memberRange(x)}</div>`:'')}${canEdit?`<button class="btn" onclick="openPrice(${x.id})">עריכה</button>`:''}</div>`).join('')}</div>`}).join('')||'<p class="muted">אין תוצאות</p>';
+ const groups={};arr.sort(byPricebookOrder).forEach(x=>(groups[x.category]??=[]).push(x));const canEdit=editing();
+ list.innerHTML=Object.keys(groups).map(c=>{const heading=amlMode?c.replace(AML_PREFIX,''):c;return `<div class="card pricegroup"><h3>${e(heading)}</h3>${groups[c].map(x=>`<div class="price-row"><div class="name"><b>${e(x.name)}</b>${x.note?`<div class="muted">${e(x.note)}</div>`:''}</div><div><span class="muted">רגיל:</span> <b>${regularRange(x)}</b></div>${isAml(x)?`<div class="aml-sample-fee"><span class="muted">הכנת דגימה במרפאה:</span> <b>${money(AML_SAMPLE_FEE)}</b></div>`:(typeof isRetailPriceItem==='function'&&isRetailPriceItem(x))?'':(String(x.member_price_text??'').trim()?`<div class="member">${x.category==='מנויים'?'מחיר מנוי מרפאה:':'מנוי זהב:'} ${memberRange(x)}</div>`:'')}${canEdit?`<button class="btn" onclick="openPrice(${x.id})">עריכה</button>`:''}</div>`).join('')}</div>`}).join('')||'<p class="muted">אין תוצאות</p>';
 }
 function install(){
  if(installed)return true;if(typeof window.showInventoryMode!=='function'||typeof window.showPriceMode!=='function'||typeof window.renderPrices!=='function')return false;
