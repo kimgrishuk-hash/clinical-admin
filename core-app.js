@@ -43,7 +43,7 @@
   document.addEventListener('error',ev=>{const el=ev.target;if(el instanceof HTMLImageElement&&el.hasAttribute('onerror')){el.style.display='none';const n=el.nextElementSibling;if(n)n.style.display='block'}},true);
 })();
 document.write('<script src="clinic-data.js?v=5"><'+'/script>');
-document.write('<script src="core-app-legacy.js?v=7"><'+'/script>');
+document.write('<script src="core-app-legacy.js?v=8"><'+'/script>');
 document.write('<script src="universal-edit.js?v=1"><'+'/script>');
 document.write('<script src="aml-pricebook.js?v=4"><'+'/script>');
 document.write('<script src="subscriptions.js?v=2"><'+'/script>');
