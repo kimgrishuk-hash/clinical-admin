@@ -21,7 +21,7 @@ function allPrices(){try{return Array.isArray(prices)?prices:[]}catch{return []}
 function editing(){try{return !!settingsMode}catch{return false}}
 
 function filterOptions(amlOnly){
- const raw=[...new Set((amlOnly?allPrices().filter(isAml):allPrices()).map(x=>x.category).filter(Boolean))].sort(sortNatural);
+ const raw=[...new Set((amlOnly?allPrices().filter(isAml):allPrices().filter(x=>!isAml(x))).map(x=>x.category).filter(Boolean))].sort(sortNatural);
  return raw.map(c=>({value:c,label:amlOnly?c.replace(AML_PREFIX,''):c}));
 }
 function syncCategoryFilter(amlOnly,reset=false){
@@ -36,7 +36,7 @@ function syncCategoryFilter(amlOnly,reset=false){
 function renderPriceRows(){
  const search=document.getElementById('priceSearch'),select=document.getElementById('priceCategory'),list=document.getElementById('procedurePriceList');if(!search||!select||!list)return;
  syncCategoryFilter(amlMode,false);
- const q=String(search.value||'').trim().toLowerCase(),cat=select.value||'';let arr=allPrices();if(amlMode)arr=arr.filter(isAml);
+ const q=String(search.value||'').trim().toLowerCase(),cat=select.value||'';let arr=allPrices();arr=arr.filter(x=>amlMode?isAml(x):!isAml(x));
  arr=arr.filter(x=>(!cat||x.category===cat)&&(!q||(String(x.name||'')+' '+String(x.category||'')+' '+String(x.note||'')).toLowerCase().includes(q)));
  const groups={};arr.forEach(x=>(groups[x.category]??=[]).push(x));const canEdit=editing();
  list.innerHTML=Object.keys(groups).sort(sortNatural).map(c=>{const heading=amlMode?c.replace(AML_PREFIX,''):c;return `<div class="card pricegroup"><h3>${e(heading)}</h3>${groups[c].map(x=>`<div class="price-row"><div class="name"><b>${e(x.name)}</b>${x.note?`<div class="muted">${e(x.note)}</div>`:''}</div><div><span class="muted">רגיל:</span> <b>${regularRange(x)}</b></div>${isAml(x)?`<div class="aml-sample-fee"><span class="muted">הכנת דגימה במרפאה:</span> <b>${money(AML_SAMPLE_FEE)}</b></div>`:(typeof isRetailPriceItem==='function'&&isRetailPriceItem(x))?'':(String(x.member_price_text??'').trim()?`<div class="member">${x.category==='מנויים'?'מחיר מנוי מרפאה:':'מנוי זהב:'} ${memberRange(x)}</div>`:'')}${canEdit?`<button class="btn" onclick="openPrice(${x.id})">עריכה</button>`:''}</div>`).join('')}</div>`}).join('')||'<p class="muted">אין תוצאות</p>';
@@ -47,7 +47,7 @@ function install(){
  let amlBtn=document.getElementById('amlBtn');if(!amlBtn){amlBtn=document.createElement('button');amlBtn.id='amlBtn';amlBtn.type='button';amlBtn.className='subtab';amlBtn.textContent=AML_LABEL;amlBtn.addEventListener('click',()=>window.showPriceMode('aml'));tabs.appendChild(amlBtn)}
  const originalShow=window.showPriceMode;
  window.showPriceMode=function(mode){const nextAml=mode==='aml';amlMode=nextAml;const title=panel.querySelector('.sectionbar h2'),search=document.getElementById('priceSearch');if(nextAml){originalShow.call(this,'procedures');document.getElementById('procBtn')?.classList.remove('active');document.getElementById('productsBtn')?.classList.remove('active');amlBtn.classList.add('active');if(title)title.textContent=AML_LABEL;if(search){search.value='';search.placeholder='חיפוש ב-AML...'}syncCategoryFilter(true,true);renderPriceRows();return}amlBtn.classList.remove('active');if(title)title.textContent='מחירון';if(search)search.placeholder='חיפוש בפרוצדורות...';const r=originalShow.apply(this,arguments);syncCategoryFilter(false,true);if(mode==='procedures')renderPriceRows();return r};
- window.renderPrices=renderPriceRows;syncCategoryFilter(false,true);renderPriceRows();return true;
+ window.renderPrices=renderPriceRows;const originalTab=window.showTab;if(typeof originalTab==='function'){window.showTab=function(id,btn){if(id==='prices'&&amlMode)window.showPriceMode('procedures');return originalTab.apply(this,arguments)}};syncCategoryFilter(false,true);renderPriceRows();return true;
 }
 const timer=setInterval(()=>{if(install())clearInterval(timer)},200);if(document.readyState!=='loading')install();
 })();
