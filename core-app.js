@@ -43,9 +43,9 @@
   document.addEventListener('error',ev=>{const el=ev.target;if(el instanceof HTMLImageElement&&el.hasAttribute('onerror')){el.style.display='none';const n=el.nextElementSibling;if(n)n.style.display='block'}},true);
 })();
 document.write('<script src="clinic-data.js?v=5"><'+'/script>');
-document.write('<script src="core-app-legacy.js?v=9"><'+'/script>');
+document.write('<script src="core-app-legacy.js?v=10"><'+'/script>');
 document.write('<script src="universal-edit.js?v=1"><'+'/script>');
-document.write('<script src="aml-pricebook.js?v=5"><'+'/script>');
+document.write('<script src="aml-pricebook.js?v=6"><'+'/script>');
 document.write('<script src="subscriptions.js?v=2"><'+'/script>');
 document.write('<script src="image-storage.js?v=1"><'+'/script>');
 document.write('<script src="home-ui.js?v=16" data-dynamic="home-ui"><'+'/script>');
