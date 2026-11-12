@@ -15,8 +15,8 @@ const sortNatural=(a,b)=>collator.compare(String(a),String(b));
 const num=v=>{const n=Number(v);return Number.isFinite(n)?n:0};
 const money=v=>num(v).toLocaleString('he-IL',{maximumFractionDigits:2})+' ₪';
 const memberMoney=v=>Math.ceil(num(v)).toLocaleString('he-IL')+' ₪';
-const regularRange=x=>{if(num(x.regular_price_min)===0)return 'לפי הערה';const a=num(x.regular_price_min),b=x.regular_price_max==null?null:num(x.regular_price_max);return b!=null&&b!==a?money(a)+'–'+money(b):money(a)};
-const memberRange=x=>{if(num(x.regular_price_min)===0)return '—';const d=(100-num(x.discount_percent??20))/100;const a=num(x.regular_price_min),b=x.regular_price_max==null?null:num(x.regular_price_max);return b!=null&&b!==a?memberMoney(a*d)+'–'+memberMoney(b*d):memberMoney(a*d)};
+const regularRange=x=>{const exact=String(x.regular_price_text??'').trim();if(exact)return e(exact);if(num(x.regular_price_min)===0)return 'לפי הערה';const a=num(x.regular_price_min),b=x.regular_price_max==null?null:num(x.regular_price_max);return b!=null&&b!==a?money(a)+'–'+money(b):money(a)};
+const memberRange=x=>{const exact=String(x.member_price_text??'').trim();return /^\d+(?:[.,]\d+)?$/.test(exact)?money(Number(exact.replace(',','.'))):e(exact)};
 function allPrices(){try{return Array.isArray(prices)?prices:[]}catch{return []}}
 function editing(){try{return !!settingsMode}catch{return false}}
 
@@ -39,7 +39,7 @@ function renderPriceRows(){
  const q=String(search.value||'').trim().toLowerCase(),cat=select.value||'';let arr=allPrices();if(amlMode)arr=arr.filter(isAml);
  arr=arr.filter(x=>(!cat||x.category===cat)&&(!q||(String(x.name||'')+' '+String(x.category||'')+' '+String(x.note||'')).toLowerCase().includes(q)));
  const groups={};arr.forEach(x=>(groups[x.category]??=[]).push(x));const canEdit=editing();
- list.innerHTML=Object.keys(groups).sort(sortNatural).map(c=>{const heading=amlMode?c.replace(AML_PREFIX,''):c;return `<div class="card pricegroup"><h3>${e(heading)}</h3>${groups[c].map(x=>`<div class="price-row"><div class="name"><b>${e(x.name)}</b>${x.note?`<div class="muted">${e(x.note)}</div>`:''}</div><div><span class="muted">רגיל:</span> <b>${regularRange(x)}</b></div>${isAml(x)?`<div class="aml-sample-fee"><span class="muted">הכנת דגימה במרפאה:</span> <b>${money(AML_SAMPLE_FEE)}</b></div>`:(typeof isRetailPriceItem==='function'&&isRetailPriceItem(x))?'':`<div class="member">מנוי זהב: ${memberRange(x)}</div>`}${canEdit?`<button class="btn" onclick="openPrice(${x.id})">עריכה</button>`:''}</div>`).join('')}</div>`}).join('')||'<p class="muted">אין תוצאות</p>';
+ list.innerHTML=Object.keys(groups).sort(sortNatural).map(c=>{const heading=amlMode?c.replace(AML_PREFIX,''):c;return `<div class="card pricegroup"><h3>${e(heading)}</h3>${groups[c].map(x=>`<div class="price-row"><div class="name"><b>${e(x.name)}</b>${x.note?`<div class="muted">${e(x.note)}</div>`:''}</div><div><span class="muted">רגיל:</span> <b>${regularRange(x)}</b></div>${isAml(x)?`<div class="aml-sample-fee"><span class="muted">הכנת דגימה במרפאה:</span> <b>${money(AML_SAMPLE_FEE)}</b></div>`:(typeof isRetailPriceItem==='function'&&isRetailPriceItem(x))?'':(String(x.member_price_text??'').trim()?`<div class="member">${x.category==='מנויים'?'מחיר מנוי מרפאה:':'מנוי זהב:'} ${memberRange(x)}</div>`:'')}${canEdit?`<button class="btn" onclick="openPrice(${x.id})">עריכה</button>`:''}</div>`).join('')}</div>`}).join('')||'<p class="muted">אין תוצאות</p>';
 }
 function install(){
  if(installed)return true;if(typeof window.showInventoryMode!=='function'||typeof window.showPriceMode!=='function'||typeof window.renderPrices!=='function')return false;
