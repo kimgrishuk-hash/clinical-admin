@@ -26,7 +26,7 @@
   };
 
   const SAFE_EXACT=new Set([
-    'login','logout','toggleSettings','renderGlobal','showTab','readProductImage','saveProduct','closeProduct','deleteProduct','openProduct','renderInventory','renderFoodBags','openFoodProduct','showPriceMode','renderPrices','openPrice','savePrice','closePrice','deletePrice','adjustQty','jumpProduct','jumpPrice','showInventoryMode',
+    'login','logout','toggleSettings','renderGlobal','showTab','readProductImage','saveProduct','closeProduct','deleteProduct','openProduct','renderInventory','renderFoodBags','openFoodProduct','showPriceMode','renderPrices','renderSubscriptions','openPrice','savePrice','closePrice','deletePrice','adjustQty','jumpProduct','jumpPrice','showInventoryMode',
     'openDailyBoard','closeDailyBoard','setDailyMode','saveDailyTask','clearDailyForm','toggleDaily','editDaily','deleteDaily','reopenOnce','completeOnce',
     'openStaffTasks','closeStaffTasks','createStaffTask','setTaskView','deleteStaffTask','reopenStaffTask','addTaskComment','closeStaffTask','openClinicMessages','closeClinicMessagePicker',
     'renderSubscriptions','jumpSubscription','openProtocolEditor','addProtocolField','removeProtocolField','addTemplateCharge','removeTemplateCharge','showTemplateCatalog','pickTemplateCatalog','addTemplateClaim','removeTemplateClaim','closeProtocolEditor','saveProtocol','deleteProtocol','editProtocol','startProtocolRun','closeProtocolRun','addRunLine','removeRunLine','updateRunLine','showRunCatalog','pickRunCatalog','setRunPlan','setRunOverride','addInjectionQuick'
@@ -45,8 +45,10 @@
 document.write('<script src="clinic-data.js?v=5"><'+'/script>');
 document.write('<script src="core-app-legacy.js?v=7"><'+'/script>');
 document.write('<script src="universal-edit.js?v=1"><'+'/script>');
-document.write('<script src="aml-pricebook.js?v=2"><'+'/script>');
+document.write('<script src="aml-pricebook.js?v=3"><'+'/script>');
+document.write('<script src="subscriptions.js?v=2"><'+'/script>');
 document.write('<script src="image-storage.js?v=1"><'+'/script>');
 document.write('<script src="home-ui.js?v=16" data-dynamic="home-ui"><'+'/script>');
+document.write('<script src="foodbags-list.js?v=2"><'+'/script>');
 
 document.write('<script src="bot-information.js?v=3"><'+'/script>');
