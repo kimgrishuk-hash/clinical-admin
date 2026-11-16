@@ -22,6 +22,21 @@ html{font-size:16px;line-height:1.5}body{color:#172b3e;background:#f2f6fa}
 :where(button,a,input,select,textarea,[tabindex]):focus-visible{outline:3px solid #df8500!important;outline-offset:3px}
 a{text-decoration-thickness:2px;text-underline-offset:3px}
 @media(max-width:650px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.product-info{padding:11px}}
+
+/* Semantic accent colors: retain blue as the primary brand color. */
+:root{--ui-blue:#174e80;--ui-red:#a51d30;--ui-green:#176448;--ui-amber:#805400}
+.btn.primary,.tab.active,.subtab.active{background:#215e96!important;color:#fff!important}
+.danger,.missing-price{background:#fff0f1!important;color:var(--ui-red)!important;border-color:#e9a7b0!important;font-weight:800}
+.low{color:var(--ui-red)!important;font-weight:800}
+.ok,.member{color:var(--ui-green)!important;font-weight:800}
+.settings-on{background:#164d7b!important;color:#fff!important}
+.product .cat{display:inline-block;background:#e9f2fa;color:#214f75;border-radius:6px;padding:3px 7px;font-weight:700}
+.stockbox{border-top:2px solid #cbdce9}
+.price{color:var(--ui-blue);font-weight:900}
+.pricegroup h3{border-right:4px solid #3679b1}
+.product:has(.low),.product:has(.missing-price){border-color:#e6aab2;box-shadow:0 0 0 1px #f5d7db}
+.product:has(.low) .stockbox,.product:has(.missing-price) .stockbox{background:#fff8f8;border-radius:7px;padding:8px}
+.product:has(.ok) .stockbox{border-top-color:#80bba7}
 </style>
 <link rel="stylesheet" href="staff-ui.css?v=5">
 <link rel="stylesheet" href="theme.css?v=4">
