@@ -17,14 +17,15 @@ async function api(body){if(window.ClinicData?.request)return ClinicData.request
 async function load(){const box=byId('supplierPriceStatus');if(box)box.textContent='טוענת מחירים...';try{const j=await api({action:'list'}),saved=j.items?.[KEY];entries=Array.isArray(saved)?saved.slice():[];const known=new Set(entries.map(x=>x.delivery+'|'+x.sku+'|'+x.date+'|'+x.supplier));let inserted=0;for(const x of seed){const k=x.delivery+'|'+x.sku+'|'+x.date+'|'+x.supplier;if(!known.has(k)){entries.push({...x});known.add(k);inserted++}}loaded=true;if(box)box.textContent=Array.isArray(saved)?'נתונים מסונכרנים בין מחשבי המרפאה':'נתוני תעודות משלוח ראשוניים';render();if(inserted)await save()}catch(e){entries=seed.map(x=>({...x}));loaded=true;if(box)box.textContent='לא ניתן לסנכרן כרגע: '+e.message+' — שינויים לא יישמרו';render()}}
 async function save(){const status=byId('supplierPriceStatus');if(status)status.textContent='שומרת...';try{await api({action:'save',key:KEY,data:entries});window.ClinicData?.localOps?.(KEY,entries);if(status)status.textContent='נשמר בענן · זמין למחשבי המרפאה';return true}catch(e){if(status)status.textContent='שגיאה בשמירה: '+e.message;alert('השינוי לא נשמר בענן: '+e.message);return false}}
 function category(x){return /טבליות|קפסולות|קפליות|tablet|capsul|caplet|chew/i.test(x.he+' '+x.en)?'tablet':null}
-const CATEGORY_LABELS=['אנטיביוטיקה','תרופות נגד טפילים','משככי כאבים ונוגדי דלקת','הרדמה וטשטוש','תרופות עיניים ואוזניים','תרופות עור ואלרגיה','תרופות נוספות','בדיקות ומעבדה','ציוד רפואי ומתכלים','מזון ותזונה','תוספים ותכשירי טיפוח','מוצרים נוספים'];
+const CATEGORY_LABELS=['אנטיביוטיקה','תרופות נגד טפילים','משככי כאבים ונוגדי דלקת','הרדמה וטשטוש','תרופות עיניים','תרופות אוזניים','תרופות עור ואלרגיה','תרופות נוספות','בדיקות ומעבדה','ציוד רפואי ומתכלים','מזון ותזונה','תוספים ותכשירי טיפוח','מוצרים נוספים'];
 function supplierCategory(x){const t=norm(x.he+' '+x.en);
 const match=r=>r.test(t);
 if(match(/אמוקס|אוגמנטין|דוקסי|קלינד|מטרוניד|פלאג׳יל|פלגיל|אופלודקס|צפור|צפאל|אנרופלוקס|סינולוקס|amoxi|augmentin|doxy|clinda|metronid|flagyl|cephal|enroflox|synulox/))return 'אנטיביוטיקה';
 if(match(/ברבקטו|סימפריקה|מילפרו|דרונטל|קרדיליו|קרדליו|פרונטליין|אמפולה נגד|תילוע|bravecto|simparica|milpro|drontal|credelio|frontline|deworm/))return 'תרופות נגד טפילים';
 if(match(/פרדניזון|מלוקסיקם|מטאקם|דיפירון|נובאלגין|רימדיל|אונסיור|קרפרופן|predni|meloxicam|metacam|dipyrone|rimadyl|onsior|carprofen/))return 'משככי כאבים ונוגדי דלקת';
 if(match(/פרופופול|דומיטור|אנסטו|בוטומידור|איזופלורן|קטמין|אלפקס|propofol|domitor|anesto|butomidor|isoflurane|ketamine|alfax/))return 'הרדמה וטשטוש';
-if(match(/טיפות עיניים|עיניים|אוזניים|אוקונוביס|אופלוקס|ocunovis|ophthalm|otic|ear drop|eye drop|tacrolimus/))return 'תרופות עיניים ואוזניים';
+if(match(/טיפות עיניים|עיניים|אוקונוביס|אופלוקס|ocunovis|ophthalm|eye drop|tacrolimus|ofloxacin/))return 'תרופות עיניים';
+if(match(/אוזניים|אוזן|otic|ear drop|aural/))return 'תרופות אוזניים';
 if(match(/אפוקוול|ציטופוינט|מלאסב|ג׳נטדרם|דרמוקומבין|ציקלוספורין|apoquel|cytopoint|malaseb|gentaderm|dermocombin|cyclosporine/))return 'תרופות עור ואלרגיה';
 if(match(/קטליסט|פרוסייט|procyte|catalyst|ריאגנט|בדיק|מעבד|מבחנ|קפילר|זכוכית נושא|reagent|laboratory|microscope|test kit/))return 'בדיקות ומעבדה';
 if(match(/מזרק|מחט|פד|גזה|פלסטר|תחבוש|כפפות|טובוס|קולר אליזבתני|חוט נמס|חוט pdo|צינורית|ביורטה|ריפוד לגבס|syringe|needle|gauze|tape|glove|endotracheal|suture|burette|bandage|collar/))return 'ציוד רפואי ומתכלים';
