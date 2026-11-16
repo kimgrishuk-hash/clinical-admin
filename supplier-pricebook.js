@@ -36,6 +36,9 @@ return 'מוצרים נוספים';}
 function productExplanation(x){
 const t=norm(x.he+' '+x.en);
 const rules=[
+[/קונבניה|קונווניה|convenia|cefovecin/,'אנטיביוטיקה בהזרקה המכילה צפובצין, המשמשת לטיפול בזיהומים חיידקיים מסוימים בכלבים ובחתולים, לפי התכשיר. מקור: משרד הבריאות — https://mohpublic.z6.web.core.windows.net/IsraelDrugs/Rishum01_20_739856524.pdf'],
+[/אונסיור|onsior|robenacoxib/,'נוגד דלקת שאינו סטרואידי לשיכוך כאב ודלקת, בעיקר סביב ניתוחים. ההתאמה תלויה במין בעל החיים ובצורת התכשיר. מקור: FDA — https://www.fda.gov/animal-veterinary/resources-you/what-veterinarians-should-advise-clients-about-pain-control-and-nonsteroidal-anti-inflammatory-drugs'],
+[/סרניה|cerenia|maropitant/,'תרופה נוגדת הקאות המכילה מרופיטנט; השימוש משתנה לפי מין בעל החיים וצורת המתן. מקור: Merck Veterinary Manual — https://www.merckvetmanual.com/pharmacology/systemic-pharmacotherapeutics-of-the-digestive-system/drugs-used-to-control-or-stimulate-vomiting-in-monogastric-animals'],
 [/אפוקוול|apoquel/,'תרופה להפחתת גרד ודלקת הקשורים למחלות עור אלרגיות בכלבים.'],
 [/ציטופוינט|cytopoint/,'טיפול ביולוגי להפחתת גרד הקשור לדלקת עור אלרגית בכלבים.'],
 [/ברבקטו|bravecto/,'תכשיר נגד פרעושים וקרציות; משך הפעולה וההתאמה תלויים בתכשיר ובבעל החיים.'],
