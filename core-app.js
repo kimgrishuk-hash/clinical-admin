@@ -42,6 +42,36 @@
   document.addEventListener('change',ev=>{const el=ev.target;if(!(el instanceof Element)||!el.hasAttribute('onchange'))return;try{runSafeHandler(el.getAttribute('onchange'),el,ev)}catch(e){console.warn('blocked inline change',e)}},true);
   document.addEventListener('error',ev=>{const el=ev.target;if(el instanceof HTMLImageElement&&el.hasAttribute('onerror')){el.style.display='none';const n=el.nextElementSibling;if(n)n.style.display='block'}},true);
 })();
+/* Shared forgiving product search: punctuation, Hebrew/English aliases, word order and light typos. */
+window.ClinicSearch=(()=>{
+ const aliases=[
+  ['n&d','nd','n and d','n d','אן אנד די','אנד די','אנדי','פארמינה','פרמינה','farmina'],
+  ['bravecto','ברבקטו','בראקטו','ברווקטו','בראווקטו'],
+  ['simparica','סימפריקה','סימפאריקה'],
+  ['royal canin','רויאל קנין','רויאל קנין','רויאל קאנין'],
+  ['renal','רנל','רינל','כליות'],
+  ['virbac','וירבק','וירבאק'],
+  ['cibau','סיבאו','ציבאו'],
+  ['hypoallergenic','היפואלרגני','היפו אלרגני'],
+  ['ocean','אושן','אוקיינוס'],
+  ['lamb','כבש'],
+  ['chicken','עוף'],
+  ['puppy','גור','גורים'],
+  ['adult','בוגר','בוגרים'],
+  ['mini','מיני'],
+  ['cat','חתול','חתולים'],
+  ['dog','כלב','כלבים']
+ ];
+ const clean=v=>String(v??'').toLowerCase().normalize('NFKC').replace(/[\u0591-\u05c7]/g,'').replace(/&/g,' and ').replace(/[\u2019\u0027\u05f3\u05f4]/g,'').replace(/[^a-z0-9\u0590-\u05ff]+/g,' ').replace(/\s+/g,' ').trim();
+ const compact=v=>clean(v).replace(/\s/g,'');
+ const variants=aliases.map((group,i)=>({key:'alias'+i,forms:group.map(clean),flat:group.map(compact)}));
+ const canonical=term=>{const v=clean(term),c=compact(term);const a=variants.find(g=>g.forms.includes(v)||g.flat.includes(c));return a?a.key:v};
+ function tokens(value){const raw=clean(value).split(' ').filter(Boolean);const out=[];for(let i=0;i<raw.length;i++){let match=null;for(const g of variants){for(const form of g.forms){const words=form.split(' ');if(words.length>1&&raw.slice(i,i+words.length).join(' ')===form&&(!match||words.length>match.len))match={key:g.key,len:words.length}}}if(match){out.push(match.key);i+=match.len-1}else out.push(canonical(raw[i]))}return out}
+ function distance(a,b){if(Math.abs(a.length-b.length)>2)return 3;let prev=Array.from({length:b.length+1},(_,i)=>i);for(let i=1;i<=a.length;i++){const row=[i];for(let j=1;j<=b.length;j++)row[j]=Math.min(row[j-1]+1,prev[j]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1));prev=row}return prev[b.length]}
+ function score(query,...fields){const q=clean(query);if(!q)return 1;const hay=fields.filter(Boolean).join(' '),h=clean(hay);if(h.includes(q))return 100;const qt=tokens(query),ht=tokens(hay);const hf=new Set(ht);let total=0;for(const term of qt){if(hf.has(term)){total+=20;continue}if(ht.some(t=>t.startsWith(term)&&term.length>=2)){total+=12;continue}if(term.length>=4&&ht.some(t=>t.length>=4&&distance(term,t)<=1)){total+=6;continue}return 0}return total}
+ return {clean,score,matches:(query,...fields)=>score(query,...fields)>0};
+})();
+
 document.write('<script src="clinic-data.js?v=5"><'+'/script>');
 document.write('<script src="core-app-legacy.js?v=10"><'+'/script>');
 document.write('<script src="universal-edit.js?v=1"><'+'/script>');
