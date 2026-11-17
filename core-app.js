@@ -45,7 +45,7 @@
 /* Shared forgiving product search: punctuation, Hebrew/English aliases, word order and light typos. */
 window.ClinicSearch=(()=>{
  const aliases=[
-  ['n&d','nd','n and d','n d','אן אנד די','אנד די','אנדי','פארמינה','פרמינה','farmina'],
+  ['n&d','nd','n and d','n d','nnd','n-d','אן אנד די','אן די','אנ די','אנד די','אנדי','פארמינה','פרמינה','farmina'],
   ['bravecto','ברבקטו','בראקטו','ברווקטו','בראווקטו'],
   ['simparica','סימפריקה','סימפאריקה'],
   ['royal canin','רויאל קנין','רויאל קנין','רויאל קאנין'],
